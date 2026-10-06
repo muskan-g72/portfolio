@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="oxLandTitle oxLandDesc">
+  <title id="oxLandTitle">Orchestrix gateway</title>
+  <desc id="oxLandDesc">Authenticated entry with virtual keys before execution.</desc>
+  <rect width="960" height="540" fill="#0b0a1a"/>
+  <text x="48" y="52" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12" letter-spacing="3">ORCHESTRIX · GATEWAY</text>
+  <text x="48" y="140" fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32">AI execution you can audit.</text>
+  <g fill="none" stroke="rgba(125,211,238,0.4)" stroke-width="1">
+    <rect x="48" y="200" width="200" height="70"/>
+    <rect x="288" y="200" width="200" height="70"/>
+    <rect x="528" y="200" width="200" height="70"/>
+  </g>
+  <g fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">
+    <text x="68" y="242">Virtual key</text>
+    <text x="308" y="242">Budget</text>
+    <text x="548" y="242">Executor</text>
+  </g>
+  <text x="48" y="340" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Authenticated virtual keys before any provider call.</text>
+  <text x="48" y="368" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Groq primary · Gemini fallback · bounded one-cycle repair.</text>
+  <text x="48" y="500" fill="#7dd3ee" font-family="ui-monospace, monospace" font-size="12">NO AUTONOMOUS PLANNER · PREDECLARED PATHS</text>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="rsDashTitle rsDashDesc">
+  <title id="rsDashTitle">RateShield dashboard</title>
+  <desc id="rsDashDesc">Keys, quotas and request posture in one operator surface, with Locust proof figures.</desc>
+  <rect width="960" height="540" fill="#0b1a14"/>
+  <text x="48" y="52" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12" letter-spacing="3">RATESHIELD · DASHBOARD</text>
+  <g fill="none" stroke="rgba(236,233,225,0.22)" stroke-width="1">
+    <rect x="48" y="96" width="270" height="120"/>
+    <rect x="338" y="96" width="270" height="120"/>
+    <rect x="628" y="96" width="284" height="120"/>
+    <rect x="48" y="240" width="864" height="220"/>
+  </g>
+  <g fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">
+    <text x="68" y="132">Throughput</text>
+    <text x="358" y="132">Latency</text>
+    <text x="648" y="132">Failures</text>
+  </g>
+  <g fill="#3ddc84" font-family="ui-monospace, monospace" font-size="22">
+    <text x="68" y="176">~95 req/s</text>
+    <text x="358" y="176">204 ms avg</text>
+    <text x="648" y="176">0%</text>
+  </g>
+  <text x="358" y="200" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12">P95 460 ms</text>
+  <text x="68" y="280" fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">Operator surface</text>
+  <g fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">
+    <text x="68" y="316">API key management</text>
+    <text x="68" y="344">Request analytics</text>
+    <text x="68" y="372">Subscription plans</text>
+    <text x="68" y="400">System health</text>
+    <text x="420" y="316">Locust: 11K+ requests</text>
+    <text x="420" y="344">Render · Vercel · Neon · Upstash</text>
+  </g>
+</svg>

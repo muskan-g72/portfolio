@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="oxTrTitle oxTrDesc">
+  <title id="oxTrTitle">Orchestrix trace</title>
+  <desc id="oxTrDesc">Auditable execution path through providers, validation, and repair.</desc>
+  <rect width="960" height="540" fill="#0b0a1a"/>
+  <text x="48" y="52" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12" letter-spacing="3">ORCHESTRIX · TRACE</text>
+  <g fill="none" stroke="rgba(125,211,238,0.35)" stroke-width="1">
+    <rect x="60" y="120" width="200" height="56"/>
+    <rect x="60" y="210" width="200" height="56"/>
+    <rect x="60" y="300" width="200" height="56"/>
+    <rect x="380" y="210" width="200" height="56"/>
+    <rect x="380" y="300" width="200" height="56"/>
+    <rect x="700" y="255" width="200" height="56"/>
+    <path d="M260 148 H320 V328 H380"/>
+    <path d="M260 238 H380"/>
+    <path d="M580 238 H640 V283 H700"/>
+    <path d="M580 328 H640"/>
+  </g>
+  <g fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">
+    <text x="80" y="154">Auth / key</text>
+    <text x="80" y="244">Budget UPDATE</text>
+    <text x="80" y="334">Executor</text>
+    <text x="400" y="244">Groq</text>
+    <text x="400" y="334">Gemini</text>
+    <text x="720" y="289">Validator</text>
+  </g>
+  <text x="48" y="440" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">Locust against real LLM providers: 1.92 s average, P95 2.9 s, 0% failures.</text>
+  <text x="48" y="500" fill="#7dd3ee" font-family="ui-monospace, monospace" font-size="12">TRACE WRITTEN TO POSTGRESQL</text>
+</svg>

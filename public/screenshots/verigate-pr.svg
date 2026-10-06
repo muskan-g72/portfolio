@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="vgPrTitle vgPrDesc">
+  <title id="vgPrTitle">VeriGate PR verification</title>
+  <desc id="vgPrDesc">GitHub PR verification with HMAC signature checks and commit status checks.</desc>
+  <rect width="960" height="540" fill="#07060a"/>
+  <text x="48" y="52" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12" letter-spacing="3">VERIGATE · PR VERIFICATION</text>
+  <rect x="48" y="100" width="864" height="360" fill="none" stroke="rgba(236,233,225,0.22)"/>
+  <text x="80" y="160" fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22">GitHub pull request</text>
+  <g fill="none" stroke="rgba(181,124,255,0.4)" stroke-width="1">
+    <rect x="80" y="200" width="240" height="72"/>
+    <rect x="360" y="200" width="240" height="72"/>
+    <rect x="640" y="200" width="232" height="72"/>
+  </g>
+  <g fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">
+    <text x="100" y="244">HMAC check</text>
+    <text x="380" y="244">Commit status</text>
+    <text x="660" y="244">Evidence bind</text>
+  </g>
+  <text x="80" y="330" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">A run can pass in CI and still be unverifiable as a release artifact.</text>
+  <text x="80" y="358" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">VeriGate treats the PR as another node on the same trace.</text>
+  <text x="80" y="420" fill="#b57cff" font-family="ui-monospace, monospace" font-size="12">WEBHOOK ’ SIGNATURE ’ STATUS ’ REPORT</text>
+</svg>

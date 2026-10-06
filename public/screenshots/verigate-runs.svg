@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="vgRunsTitle vgRunsDesc">
+  <title id="vgRunsTitle">VeriGate runs</title>
+  <desc id="vgRunsDesc">Test evidence collected per run, ready to attach to a release decision.</desc>
+  <rect width="960" height="540" fill="#07060a"/>
+  <text x="48" y="52" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12" letter-spacing="3">VERIGATE · RUNS</text>
+  <g fill="none" stroke="rgba(236,233,225,0.22)" stroke-width="1">
+    <rect x="48" y="100" width="864" height="64"/>
+    <rect x="48" y="184" width="864" height="64"/>
+    <rect x="48" y="268" width="864" height="64"/>
+    <rect x="48" y="352" width="864" height="64"/>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="13">
+    <text x="68" y="138" fill="#ece9e1">RUN</text>
+    <text x="220" y="138" fill="#8d8b86">pytest · collected evidence</text>
+    <text x="720" y="138" fill="#b57cff">TRACEABLE</text>
+    <text x="68" y="222" fill="#ece9e1">RUN</text>
+    <text x="220" y="222" fill="#8d8b86">playwright · browser evidence</text>
+    <text x="720" y="222" fill="#b57cff">TRACEABLE</text>
+    <text x="68" y="306" fill="#ece9e1">ISSUE</text>
+    <text x="220" y="306" fill="#8d8b86">failure bound to the same run</text>
+    <text x="720" y="306" fill="#ec4899">DIAGNOSTIC</text>
+    <text x="68" y="390" fill="#ece9e1">EXPORT</text>
+    <text x="220" y="390" fill="#8d8b86">audit-ready PDF / JSON</text>
+    <text x="720" y="390" fill="#ece9e1">READY</text>
+  </g>
+  <text x="48" y="500" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">Evidence is the chain. Status without a trace is not a release artifact.</text>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="rsKeysTitle rsKeysDesc">
+  <title id="rsKeysTitle">RateShield API keys</title>
+  <desc id="rsKeysDesc">API key issuance for authenticated clients with hashed storage.</desc>
+  <rect width="960" height="540" fill="#0b1a14"/>
+  <text x="48" y="52" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12" letter-spacing="3">RATESHIELD · API KEYS</text>
+  <g fill="none" stroke="rgba(236,233,225,0.22)" stroke-width="1">
+    <rect x="48" y="100" width="864" height="72"/>
+    <rect x="48" y="192" width="864" height="72"/>
+    <rect x="48" y="284" width="864" height="72"/>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="14">
+    <text x="72" y="144" fill="#ece9e1">KEY</text>
+    <text x="200" y="144" fill="#8d8b86">hashed at rest · JWT session</text>
+    <text x="720" y="144" fill="#3ddc84">ACTIVE</text>
+    <text x="72" y="236" fill="#ece9e1">QUOTA</text>
+    <text x="200" y="236" fill="#8d8b86">per-user sliding window</text>
+    <text x="720" y="236" fill="#3ddc84">LUA</text>
+    <text x="72" y="328" fill="#ece9e1">429</text>
+    <text x="200" y="328" fill="#8d8b86">reject when the window is full</text>
+    <text x="720" y="328" fill="#ff7a59">BOUNDED</text>
+  </g>
+  <text x="48" y="430" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Read, increment and reject happen in one Redis Lua step.</text>
+  <text x="48" y="500" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12">PASSWORD HASHING · API KEY HASHING · STRUCTURED LOGS</text>
+</svg>

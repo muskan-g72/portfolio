@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="tfProofTitle tfProofDesc">
+  <title id="tfProofTitle">TaskForge throughput</title>
+  <desc id="tfProofDesc">Measured 63 jobs per second with 1 worker and 481 jobs per second with 8 workers.</desc>
+  <rect width="960" height="540" fill="#0a0a0c"/>
+  <text x="48" y="56" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12" letter-spacing="3">TASKFORGE · PROOF</text>
+  <text x="48" y="160" fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22">1 worker</text>
+  <text x="780" y="160" fill="#ece9e1" font-family="ui-monospace, monospace" font-size="22" text-anchor="end">63 jobs/s</text>
+  <rect x="48" y="180" width="120" height="2" fill="#ece9e1"/>
+  <text x="48" y="280" fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="22">8 workers</text>
+  <text x="780" y="280" fill="#ece9e1" font-family="ui-monospace, monospace" font-size="22" text-anchor="end">481 jobs/s</text>
+  <rect x="48" y="300" width="732" height="2" fill="#ece9e1"/>
+  <text x="48" y="420" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">Thread-safety validated with ThreadSanitizer</text>
+  <text x="48" y="450" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16">Core modules covered by CTest</text>
+</svg>

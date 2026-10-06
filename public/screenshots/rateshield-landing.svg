@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="rsLandTitle rsLandDesc">
+  <title id="rsLandTitle">RateShield landing</title>
+  <desc id="rsLandDesc">Gateway entry  authenticate, then bound traffic.</desc>
+  <rect width="960" height="540" fill="#0b1a14"/>
+  <text x="48" y="52" fill="#8d8b86" font-family="ui-monospace, monospace" font-size="12" letter-spacing="3">RATESHIELD · LANDING</text>
+  <text x="48" y="140" fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32">Let good traffic through.</text>
+  <text x="48" y="184" fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32">Stop the rest.</text>
+  <g fill="none" stroke="rgba(61,220,132,0.45)" stroke-width="1">
+    <rect x="48" y="240" width="220" height="64"/>
+    <rect x="292" y="240" width="220" height="64"/>
+    <rect x="536" y="240" width="220" height="64"/>
+  </g>
+  <g fill="#ece9e1" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">
+    <text x="68" y="278">JWT / API keys</text>
+    <text x="312" y="278">Redis Lua window</text>
+    <text x="556" y="278">Application</text>
+  </g>
+  <text x="48" y="370" fill="#8d8b86" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15">Authenticate, then enforce per-user quotas before work continues.</text>
+  <text x="48" y="500" fill="#3ddc84" font-family="ui-monospace, monospace" font-size="12">SLIDING WINDOW · ONE SERVER-SIDE STEP</text>
+</svg>
