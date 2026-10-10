@@ -1,5 +1,5 @@
 export type StopId = 'home' | 'about' | 'experience' | 'work' | 'contact';
-export type StopKind = 'knot' | 'crystal' | 'aizawa' | 'deck' | 'mobius';
+export type StopKind = 'knot' | 'crystal' | 'aizawa' | 'deck' | 'orbit8';
 
 export interface Stop {
   id: StopId;
@@ -27,7 +27,7 @@ export const STOPS: Stop[] = [
   { id: 'about', name: 'ABOUT', kind: 'crystal', anchor: [0.12, 0.28], position: { x: 4.6, y: -1.2, z: -70, r: 3.9, dist: 24, halo: 0xe27ba6 }, appearWindow: 'first' },
   { id: 'experience', name: 'EXPERIENCE', kind: 'aizawa', anchor: [0.38, 0.47], position: { x: 7, y: 1, z: -150, r: 3.8, dist: 25, halo: 0x5f8fff }, appearWindow: 'later' },
   { id: 'work', name: 'WORK', kind: 'deck', anchor: [0.59, 0.91], position: { x: 6.2, y: -0.4, z: -230, r: 3.9, dist: 17, halo: 0x8fb8ff }, appearWindow: 'later' },
-  { id: 'contact', name: 'CONTACT', kind: 'mobius', anchor: [0.98, 1], position: { x: 6.5, y: 0.6, z: -350, r: 3.6, dist: 24, halo: 0x58e0b8 }, appearWindow: 'contact' },
+  { id: 'contact', name: 'CONTACT', kind: 'orbit8', anchor: [0.98, 1], position: { x: 6.5, y: 0.6, z: -350, r: 3.6, dist: 24, halo: 0x58e0b8 }, appearWindow: 'contact' },
 ];
 
 export const STAGES = STOPS.map(({ name }) => ({ name }));

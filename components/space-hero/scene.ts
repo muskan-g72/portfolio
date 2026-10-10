@@ -183,7 +183,6 @@ export function createScene(root: HTMLElement): (() => void) | null {
   let camZNow = 0, slideF = 0;
   const PANEL_OFF = [[0, 0, 0], [1.3, 1.0, -20], [2.6, -0.4, -40], [3.9, 0.8, -60]];
   /* ---------- helpers ---------- */
-  function addMat(color: number, size: number, opacity?: number) { return new THREE.PointsMaterial({ size: size, map: GLOW, color: color, transparent: true, opacity: opacity === undefined ? 1 : opacity, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true }); }
   function lineMat(color: number, opacity: number) { return new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: opacity, blending: THREE.AdditiveBlending, depthWrite: false }); }
   function vcolors(positions: ArrayLike<number>, c0: number, c1: number, axis: number, span: number) {
     const n = positions.length / 3, col = new Float32Array(n * 3), a = new THREE.Color(c0), b = new THREE.Color(c1), t = new THREE.Color();
@@ -308,23 +307,50 @@ export function createScene(root: HTMLElement): (() => void) | null {
         pulses.forEach(function (pulse) { if (reduced || !active) { pulse.point.visible = false; return; } pulse.point.visible = true; const segments = edgePositions.count / 2; const cycle = ((time + pulse.phase) % pulse.duration) / pulse.duration; const edge = (pulse.edge + Math.floor((time + pulse.phase) / pulse.duration)) % segments; const a = edge * 2, b = a + 1; pulse.point.position.set(lerp(edgePositions.getX(a), edgePositions.getX(b), cycle), lerp(edgePositions.getY(a), edgePositions.getY(b), cycle), lerp(edgePositions.getZ(a), edgePositions.getZ(b), cycle)); });
       };
     },
-    /* CONTACT: a Möbius loop drawn as a fine mesh, one continuous surface */
-    mobius: function (d, grp) {
-      const U = 160, Vn = 7, R = d.r * 0.95, Wd = d.r * 0.42, pts: THREE.Vector3[] = [], segs: THREE.Vector3[] = [];
-      let i: number, j: number;
-      function P(u: number, v: number) { const a = u * Math.PI * 2, hw = (v - 0.5) * 2 * Wd, h = a / 2; return new THREE.Vector3((R + hw * Math.cos(h)) * Math.cos(a), hw * Math.sin(h), (R + hw * Math.cos(h)) * Math.sin(a)); }
-      for (j = 0; j < Vn; j++) for (i = 0; i < U; i++) { segs.push(P(i / U, j / (Vn - 1)), P((i + 1) / U, j / (Vn - 1))); }
-      for (i = 0; i < U; i += 2) for (j = 0; j < Vn - 1; j++) segs.push(P(i / U, j / (Vn - 1)), P(i / U, (j + 1) / (Vn - 1)));
-      for (i = 0; i < U; i++) { pts.push(P(i / U, 0)); }
-      const g = new THREE.Group();
-      const lines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(segs), lineMat(0x7ee0b5, 0.5));
-      const edge = new THREE.Points(new THREE.BufferGeometry().setFromPoints(pts), addMat(0xd8fff0, 0.3));
-      const runner = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      const rg = sprite(0x7ee0b5, 1.6, 0.9); runner.add(rg);
-      g.add(lines, edge, runner); g.rotation.set(0.9, 0.2, -0.3); grp.add(g);
-      grp.add(sprite(0x58e0b8, d.r * 1.8, 0.28));
-      let tt = 0;
-      return function (dt) { tt += dt; g.rotation.y += dt * 0.14; const q = P((tt * 0.07) % 1, 0.5); runner.position.copy(q); };
+    /* CONTACT: Chenciner–Montgomery's equal-mass three-body figure-eight. */
+    orbit8: function (d, grp) {
+      const COUNT = 2000, PERIOD = 6.32591398, STEP = PERIOD / COUNT, TRAIL = 260;
+      type BodyState = Array<{ x: number; y: number; vx: number; vy: number }>;
+      const orbit: Array<Array<{ x: number; y: number }>> = [[], [], []];
+      let state: BodyState = [
+        { x: -0.97000436, y: 0.24308753, vx: 0.466203685, vy: 0.43236573 },
+        { x: 0.97000436, y: -0.24308753, vx: 0.466203685, vy: 0.43236573 },
+        { x: 0, y: 0, vx: -0.93240737, vy: -0.86473146 },
+      ];
+      function derivative(s: BodyState): BodyState {
+        return s.map(function (body, i) {
+          let ax = 0, ay = 0;
+          s.forEach(function (other, j) { if (i !== j) { const dx = other.x - body.x, dy = other.y - body.y, r2 = dx * dx + dy * dy, inv = 1 / (r2 * Math.sqrt(r2)); ax += dx * inv; ay += dy * inv; } });
+          return { x: body.vx, y: body.vy, vx: ax, vy: ay };
+        });
+      }
+      function add(s: BodyState, k: BodyState, amount: number): BodyState { return s.map(function (v, i) { return { x: v.x + k[i].x * amount, y: v.y + k[i].y * amount, vx: v.vx + k[i].vx * amount, vy: v.vy + k[i].vy * amount }; }); }
+      for (let step = 0; step < COUNT; step++) {
+        state.forEach(function (body, i) { orbit[i].push({ x: body.x, y: body.y }); });
+        const k1 = derivative(state), k2 = derivative(add(state, k1, STEP / 2)), k3 = derivative(add(state, k2, STEP / 2)), k4 = derivative(add(state, k3, STEP));
+        state = state.map(function (body, i) { return { x: body.x + STEP * (k1[i].x + 2 * k2[i].x + 2 * k3[i].x + k4[i].x) / 6, y: body.y + STEP * (k1[i].y + 2 * k2[i].y + 2 * k3[i].y + k4[i].y) / 6, vx: body.vx + STEP * (k1[i].vx + 2 * k2[i].vx + 2 * k3[i].vx + k4[i].vx) / 6, vy: body.vy + STEP * (k1[i].vy + 2 * k2[i].vy + 2 * k3[i].vy + k4[i].vy) / 6 }; });
+      }
+      const g = new THREE.Group(); g.rotation.set(0.9, 0, -0.25); grp.add(g);
+      g.add(sprite(0x7ee0b5, d.r * 1.9, 0.16));
+      const colors = [0x7ee0b5, 0x8fb8ff, 0xffb86b];
+      const bodies = colors.map(function (color) {
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.11, 14, 10), new THREE.MeshBasicMaterial({ color: color }));
+        body.add(sprite(color, 1.4, 0.9)); g.add(body);
+        const positions = new Float32Array(TRAIL * 3), trailColors = new Float32Array(TRAIL * 3), base = new THREE.Color(color);
+        for (let i = 0; i < TRAIL; i++) { const fade = 1 - i / (TRAIL - 1); trailColors[i * 3] = base.r * fade; trailColors[i * 3 + 1] = base.g * fade; trailColors[i * 3 + 2] = base.b * fade; }
+        const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); geometry.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
+        const trail = new THREE.Line(geometry, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false })); g.add(trail);
+        return { body: body, positions: positions, geometry: geometry };
+      });
+      let playhead = 0;
+      function updateBodies(index: number) {
+        bodies.forEach(function (entry, bodyIndex) {
+          for (let i = 0; i < TRAIL; i++) { const point = orbit[bodyIndex][(index - i + COUNT) % COUNT]; entry.positions[i * 3] = point.x * 0.95 * d.r; entry.positions[i * 3 + 1] = point.y * 0.95 * d.r; entry.positions[i * 3 + 2] = 0; }
+          entry.geometry.attributes.position.needsUpdate = true;
+          entry.body.position.set(entry.positions[0], entry.positions[1], entry.positions[2]);
+        });
+      }
+      return function (dt, _time, reduced) { if (reduced) playhead = 400; else playhead = (playhead + dt * 0.5 / STEP) % COUNT; const index = Math.floor(playhead); updateBodies(index); g.rotation.y += reduced ? 0 : dt * 0.06; };
     }
   };
 
@@ -334,7 +360,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
   const planets = orderedStops.map(function (entry) {
     const d: Obj = { ...entry.position, kind: entry.kind };
     const grp = new THREE.Group(); grp.position.set(d.x, d.y, d.z);
-    const halo = sprite(d.halo as number, d.r * 4.2, 0.2); grp.add(halo);
+    const halo = sprite(d.halo as number, d.r * 4.2, 0.2); halo.visible = d.kind !== 'orbit8'; grp.add(halo);
     const update = builders[d.kind](d, grp);
     const pick = new THREE.Mesh(new THREE.SphereGeometry(d.r * 1.15, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
     grp.add(pick);
@@ -516,6 +542,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
         ticksEl.querySelectorAll('button').forEach(function (bn, j) { const item = tickStops[j]; const on = item.id === id && item.index === subIndex; bn.classList.toggle('on', on); bn.style.display = item.id === id ? '' : 'none'; bn.style.setProperty('--tick', isWork ? pj.color : '#e27ba6'); });
         capCta.classList.toggle('on', id === 'contact');
         capLinks.classList.toggle('on', id === 'contact');
+        capContactStatus.classList.toggle('on', id === 'contact');
       }
       caption.classList.toggle('show', show);
     }
@@ -561,7 +588,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
     renderer.forceContextLoss();
     canvas.remove();
     dotsEl.textContent = ''; ticksEl.textContent = ''; chipsEl.textContent = ''; capProjectLinks.textContent = '';
-    caption.classList.remove('show'); capCta.classList.remove('on'); capLinks.classList.remove('on'); ticksEl.classList.remove('on');
+    caption.classList.remove('show'); capCta.classList.remove('on'); capLinks.classList.remove('on'); capContactStatus.classList.remove('on'); ticksEl.classList.remove('on');
     copy.removeAttribute('style');
     root.querySelectorAll('.nav ul button.on').forEach(function (bn) { bn.classList.remove('on'); });
   };
