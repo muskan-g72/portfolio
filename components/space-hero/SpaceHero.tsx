@@ -96,6 +96,10 @@ export default function SpaceHero() {
                   ))}
                 </div>
                 <div className="tag">{pj.tag}</div>
+                <div className="links sh-fb-project-links">
+                  {pj.live ? <a href={pj.live} target="_blank" rel="noopener noreferrer">LIVE DEMO ↗</a> : null}
+                  <a href={pj.github} target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
+                </div>
               </li>
             ))}
           </ul>

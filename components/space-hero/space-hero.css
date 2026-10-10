@@ -91,5 +91,6 @@ html:has(.space-hero), body:has(.space-hero) { background: #04050b; }
 .space-hero .sh-fb-list img { display: block; width: 100%; max-width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); }
 .space-hero .sh-fb-end { margin-top: 56px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
 .space-hero .sh-fb-end .links { display: flex; margin-top: 0; }
+.space-hero .sh-fb-project-links { display: flex; margin-top: 14px; }
 .space-hero.sh-nogl .track { display: none; }
 .space-hero.sh-nogl .sh-fallback { display: block; }
