@@ -85,13 +85,19 @@ html:has(.space-hero), body:has(.space-hero) { background: #04050b; }
 @media (prefers-reduced-motion: reduce) { .space-hero .status i, .space-hero .hud .scroll b { animation: none; } }
 
 /* ---- Additions (not in REFERENCE): contact links row, no-WebGL fallback. Existing tokens and type styles only. ---- */
-.space-hero .links { flex-wrap: wrap; gap: 8px 22px; pointer-events: auto; font: 500 11px/1 var(--mono); letter-spacing: 0.16em; color: var(--muted); }
+.space-hero .links { flex-wrap: wrap; gap: 8px 12px; pointer-events: auto; font: 500 11px/1 var(--mono); letter-spacing: 0.16em; color: var(--muted); }
 .space-hero .caption .links { margin-top: 18px; display: none; }
 .space-hero .caption.show .links.on { display: flex; }
 .space-hero .caption .project-links { margin-top: 14px; }
 .space-hero .links a { padding: 4px 0; transition: color .2s; }
 .space-hero .links a:hover { color: var(--fg); }
-@media (max-width: 760px) { .space-hero .caption p { max-width: 18em; font-size: 14px; line-height: 1.42; } .space-hero .caption h2 { font-size: clamp(28px, 10vw, 42px); } }
+.space-hero .project-links a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 10px; border: 1px solid var(--project-accent, var(--ice)); font: 600 15px/1 var(--body); letter-spacing: 0; color: var(--fg); }
+.space-hero .project-links a.live-button { background: var(--project-accent, var(--ice)); color: #07101d; box-shadow: 0 10px 36px -12px var(--project-accent, var(--ice)); }
+.space-hero .project-links a.github-button:hover { background: color-mix(in srgb, var(--project-accent, var(--ice)) 12%, transparent); }
+.space-hero .caption .links:not(.project-links) a { min-height: 44px; display: inline-flex; align-items: center; padding: 12px 18px; border: 1px solid rgba(170, 190, 255, 0.35); border-radius: 999px; font: 600 15px/1 var(--mono); letter-spacing: .08em; }
+.space-hero .caption .links:not(.project-links) a:hover { color: var(--mint); border-color: var(--mint); background: rgba(126, 224, 181, .08); }
+@media (max-width: 760px) { .space-hero .caption p { max-width: 18em; font-size: 14px; line-height: 1.42; } .space-hero .caption h2 { font-size: clamp(28px, 10vw, 42px); } .space-hero .experience-bullets { max-width: min(19em, calc(100vw - 68px)); font-size: 13px; line-height: 1.35; } }
+@media (max-width: 520px) { .space-hero .caption .links:not(.project-links) a { font-size: 14px; } }
 
 .space-hero .sh-fallback { display: none; position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden; }
 .space-hero .sh-fallback::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(70vmax 50vmax at 78% 18%, rgba(46, 70, 160, 0.30), transparent 70%), radial-gradient(60vmax 45vmax at 4% 104%, rgba(150, 90, 40, 0.16), transparent 70%), radial-gradient(50vmax 40vmax at 40% 60%, rgba(20, 30, 70, 0.35), transparent 70%); }

@@ -506,8 +506,9 @@ export function createScene(root: HTMLElement): (() => void) | null {
         (isWork ? pj.metrics : isAbout ? about.chips : []).forEach(function (m) { const sp = document.createElement('span'); sp.textContent = m; sp.style.setProperty('--chip', isWork ? pj.color + '66' : 'var(--line)'); chipsEl.appendChild(sp); });
         capProjectLinks.textContent = '';
         if (isWork) {
-          const links = [{ label: 'LIVE DEMO ↗', href: pj.live }, { label: 'GITHUB ↗', href: pj.github }];
-          links.forEach(function (link) { if (!link.href) return; const a = document.createElement('a'); a.href = link.href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = link.label; capProjectLinks.appendChild(a); });
+          capProjectLinks.style.setProperty('--project-accent', pj.color);
+          const links = [{ label: 'Live demo ↗', href: pj.live, className: 'live-button' }, { label: 'GitHub ↗', href: pj.github, className: 'github-button' }];
+          links.forEach(function (link) { if (!link.href) return; const a = document.createElement('a'); a.href = link.href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.className = link.className; a.textContent = link.label; capProjectLinks.appendChild(a); });
         }
         capProjectLinks.classList.toggle('on', isWork);
         const hasTicks = isWork || isAbout;
