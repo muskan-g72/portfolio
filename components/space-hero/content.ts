@@ -33,8 +33,8 @@ export const STOPS: Stop[] = [
 export const STAGES = STOPS.map(({ name }) => ({ name }));
 
 export const ABOUT_SLIDES = [
-  { title: 'Thapar Institute of Engineering and Technology', lines: ['B. Tech. in Computer Science and Engineering'], chips: ['Aug 2024 – Jun 2028', 'CGPA: 9.47/10'] },
-  { title: 'SCHOLARSHIPS & AWARDS', lines: ['Reliance Foundation Scholar 2024 — national merit scholarship awarded to 5,000 students across India.', 'Thapar Institute Merit Scholarship — awarded to top 10% of cohort for Year 1 academic performance.', 'School Topper, Class XII (CBSE) — 96.8%.'], chips: [] },
+  { title: 'EDUCATION', institute: 'Thapar Institute of Engineering and Technology', lines: ['Reliance Foundation Scholar 2024', 'Thapar Institute Merit Scholarship'], chips: [] },
+  { title: 'EDUCATION', institute: 'Thapar Institute of Engineering and Technology', lines: ['B. Tech. in Computer Science and Engineering'], chips: ['Aug 2024 – Jun 2028', 'CGPA: 9.47/10'] },
 ] as const;
 
 export const EXPERIENCE_SLIDES = [{

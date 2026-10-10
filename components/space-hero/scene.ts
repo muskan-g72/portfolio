@@ -41,7 +41,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
 
   const $ = (id: string) => root.querySelector('#' + id) as HTMLElement;
   const copy = $('copy'), caption = $('caption');
-  const capIdx = $('capIdx'), capName = $('capName'), capDesc = $('capDesc'), capCta = $('capCta'), capLinks = $('capLinks'), capProjectLinks = $('capProjectLinks'), chipsEl = $('chips'), tagEl = $('capTag'), ticksEl = $('ticks');
+  const capIdx = $('capIdx'), capName = $('capName'), capDesc = $('capDesc'), capAboutContent = $('capAboutContent'), capExperience = $('capExperience'), capContactStatus = $('capContactStatus'), capCta = $('capCta'), capLinks = $('capLinks'), capProjectLinks = $('capProjectLinks'), chipsEl = $('chips'), tagEl = $('capTag'), ticksEl = $('ticks');
   const distEl = $('dist');
   const dotsEl = $('dots');
 
@@ -274,7 +274,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
       const core = new THREE.Mesh(inner, mat(0xffc0dc, 0.12)); n.add(core);
       const halo = sprite(0xe27ba6, d.r * 1.8, 0.4); grp.add(o, n, halo);
       const orbit = new THREE.Mesh(new THREE.TorusGeometry(d.r * 1.35, 0.012, 10, 160), mat(0xf5b8d6, 0.5)); orbit.rotation.x = 1.25; orbit.rotation.y = 0.3; grp.add(orbit);
-      const awards = ABOUT_SLIDES[1].lines;
+      const awards = ABOUT_SLIDES[0].lines;
       const beads = awards.map(function (_, index) {
         const orbitGroup = new THREE.Group(), spin = new THREE.Group();
         orbitGroup.rotation.set(0.62 + index * 0.37, 0.2 + index * 0.58, index * 0.23);
@@ -485,10 +485,22 @@ export function createScene(root: HTMLElement): (() => void) | null {
         const pj = PROJECTS[subIndex], about = ABOUT_SLIDES[subIndex], experience = EXPERIENCE_SLIDES[subIndex];
         const stopNumber = String(STOPS.indexOf(stop(id))).padStart(2, '0');
         capIdx.textContent = `${stopNumber} / ${String(LAST).padStart(2, '0')}${isWork ? `  ·  WORK  ·  PROJECT ${String(subIndex + 1).padStart(2, '0')} / ${String(PROJECTS.length).padStart(2, '0')}` : isAbout ? `  ·  ABOUT  ·  ${String(subIndex + 1).padStart(2, '0')} / ${String(ABOUT_SLIDES.length).padStart(2, '0')}` : ''}`;
-        capName.textContent = isWork ? pj.name : isAbout ? about.title : isExperience ? experience.title : 'CONTACT';
+        capName.textContent = isWork ? pj.name : isAbout ? about.title : isExperience ? experience.company : 'CONTACT';
         capName.style.color = isWork ? pj.color : '';
-        caption.classList.toggle('long-title', isAbout && subIndex === 0);
-        capDesc.textContent = isWork ? pj.desc : isAbout ? about.lines.join(' ') : isExperience ? `${experience.company} · ${experience.location} · ${experience.dates}\n${experience.lines.join(' ')}` : 'Open to SWE internships. The résumé is one click away.';
+        caption.classList.toggle('long-title', isAbout || isExperience);
+        capDesc.textContent = isWork ? pj.desc : id === 'contact' ? 'I build systems that hold up under load and prove it with numbers: TaskForge scales from 63 to 481 jobs/s, and my API projects hold 0% failures under load tests.' : '';
+        capAboutContent.textContent = '';
+        capExperience.textContent = '';
+        if (isAbout) {
+          const institute = document.createElement('div'); institute.className = 'institute'; institute.textContent = about.institute; capAboutContent.appendChild(institute);
+          const lines = document.createElement('div'); lines.className = 'about-lines'; about.lines.forEach(function (line) { const item = document.createElement('div'); item.textContent = line; lines.appendChild(item); }); capAboutContent.appendChild(lines);
+        }
+        if (isExperience) {
+          const role = document.createElement('div'); role.className = 'experience-role'; role.textContent = experience.title;
+          const meta = document.createElement('div'); meta.className = 'experience-meta'; meta.textContent = `${experience.location} · ${experience.dates}`;
+          const bullets = document.createElement('ul'); bullets.className = 'experience-bullets'; experience.lines.forEach(function (line) { const item = document.createElement('li'); item.textContent = line; bullets.appendChild(item); });
+          capExperience.append(role, meta, bullets);
+        }
         tagEl.textContent = isWork ? pj.tag : isAbout ? '' : isExperience ? experience.tag : '';
         chipsEl.innerHTML = '';
         (isWork ? pj.metrics : isAbout ? about.chips : []).forEach(function (m) { const sp = document.createElement('span'); sp.textContent = m; sp.style.setProperty('--chip', isWork ? pj.color + '66' : 'var(--line)'); chipsEl.appendChild(sp); });
