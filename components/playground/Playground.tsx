@@ -81,10 +81,9 @@ export function VeriGateTrace() {
 export function RateLimiterDemo() {
   const [stamps, setStamps] = useState<number[]>([]);
   const [log, setLog] = useState<Array<{ t: number; ok: boolean }>>([]);
-  const [now, setNow] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    setNow(Date.now());
     const id = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(id);
   }, []);
