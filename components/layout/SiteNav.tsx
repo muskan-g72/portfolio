@@ -65,7 +65,7 @@ export function SiteNav() {
             onClick={() =>
               window.dispatchEvent(new Event("open-command-palette"))
             }
-            aria-label="Open command palette"
+            aria-label="⌘ K, open command palette"
           >
             ⌘ K
           </button>
@@ -96,14 +96,10 @@ export function SiteNav() {
 export function SkipLink() {
   return (
     <a
-      href="#work"
-      className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[90] focus:bg-surface focus:px-3 focus:py-2 focus:text-sm"
-      onClick={(event) => {
-        event.preventDefault();
-        jumpToHash("#work");
-      }}
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:text-text focus:border focus:border-hairline"
     >
-      Skip to work
+      Skip to content
     </a>
   );
 }

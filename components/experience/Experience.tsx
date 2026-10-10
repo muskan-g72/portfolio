@@ -80,17 +80,6 @@ export function Experience() {
           >
             {open ? "Show less" : "Implementation details"}
           </button>
-          <div className="mt-8">
-            <a
-              href={exp.certificateHref}
-              className="mono text-[11px] text-text underline decoration-hairline underline-offset-4"
-            >
-              {exp.certificateLabel}
-            </a>
-            <p className="mt-2 text-xs text-muted">
-              Placeholder file until the signed certificate is added.
-            </p>
-          </div>
         </div>
         <div className="relative min-h-56">
           <div

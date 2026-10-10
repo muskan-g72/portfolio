@@ -19,6 +19,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: project.name,
     description: `${project.tagline} ${project.description}`,
+    openGraph: {
+      title: `${project.name} — Muskan`,
+      description: `${project.tagline} ${project.description}`,
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${project.name} — Muskan`,
+      description: `${project.tagline} ${project.description}`,
+    },
   };
 }
 
@@ -28,7 +38,7 @@ export default async function WorkPage({ params }: Props) {
   if (!project) notFound();
 
   return (
-    <main>
+    <main id="main-content" tabIndex={-1} className="outline-none">
       <ProjectThemeSync slug={project.slug} />
       <CaseStudy project={project} />
     </main>

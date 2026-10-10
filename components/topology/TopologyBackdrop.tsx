@@ -7,7 +7,11 @@ import {
   useIsTablet,
   usePrefersReducedMotion,
 } from "@/lib/motion";
-import { getScrollScene, subscribeScrollScene } from "@/lib/scroll-scene";
+import {
+  getScrollScene,
+  setScrollScene,
+  subscribeScrollScene,
+} from "@/lib/scroll-scene";
 
 const Topology3D = dynamic(() => import("@/components/topology/Topology3D"), {
   ssr: false,
@@ -45,17 +49,14 @@ export function TopologyBackdrop() {
     return () => window.clearTimeout(timeout);
   }, [mobile, reduced, tablet]);
 
-  useEffect(() => {
-    const update = () => {
-      const scene = getScrollScene();
-      const fade = Math.max(0, 1 - scene.handoff * 1.4 - scene.works * 2);
-      setOpacity(0.22 + fade * 0.5);
-    };
-    update();
-    return subscribeScrollScene(update);
-  }, []);
+  const active3D = webgl && !mobile && !tablet && !reduced && ready;
 
-  if (!webgl || mobile || tablet || reduced || !ready) return null;
+  useEffect(() => {
+    setScrollScene({ is3DActive: active3D });
+    return () => setScrollScene({ is3DActive: false });
+  }, [active3D]);
+
+  if (!active3D) return null;
 
   return (
     <div

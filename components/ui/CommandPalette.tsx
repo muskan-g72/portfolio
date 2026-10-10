@@ -67,6 +67,8 @@ export function CommandPalette() {
     };
   }, []);
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (open) {
       setActive(0);
@@ -77,6 +79,24 @@ export function CommandPalette() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!open) return;
+      if (event.key === "Tab") {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        const focusable = Array.from(
+          dialog.querySelectorAll<HTMLElement>("input, button:not([disabled])"),
+        );
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+        return;
+      }
       if (event.key === "ArrowDown") {
         event.preventDefault();
         setActive((value) => (value + 1) % Math.max(results.length, 1));
@@ -110,6 +130,7 @@ export function CommandPalette() {
           onClick={() => setOpen(false)}
         >
           <motion.div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Command palette"
@@ -131,20 +152,8 @@ export function CommandPalette() {
                 setQuery(event.target.value);
                 setActive(0);
               }}
-              onKeyDown={(event) => {
-                if (event.key === "Tab") {
-                  const buttons = Array.from(
-                    event.currentTarget
-                      .closest('[role="dialog"]')
-                      ?.querySelectorAll<HTMLElement>("button") ?? [],
-                  );
-                  if (!buttons.length) return;
-                  event.preventDefault();
-                  buttons[0]?.focus();
-                }
-              }}
               placeholder="Go to work, a project, resume…"
-              className="w-full border-b border-hairline bg-transparent px-4 py-3 text-sm text-text outline-none placeholder:text-muted"
+              className="w-full border-b border-hairline bg-transparent px-4 py-3 text-sm text-text outline-none placeholder:text-muted focus:ring-1 focus:ring-text/40"
             />
             <div className="max-h-80 overflow-y-auto py-2">
               {groups.map((group) => {

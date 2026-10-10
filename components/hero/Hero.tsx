@@ -27,7 +27,7 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="relative z-10 flex min-h-[100dvh] flex-col overflow-hidden px-4 pb-16 pt-24 md:justify-end md:px-8 md:pt-24 md:pb-16"
+      className="relative z-10 flex min-h-[100dvh] flex-col justify-between overflow-hidden px-4 pb-12 pt-20 md:px-8 md:pb-12 md:pt-20"
     >
       <div className="pointer-events-none absolute left-4 top-16 z-10 hidden md:block md:left-8">
         <p className="mono text-[10px] text-muted">
@@ -44,7 +44,7 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center text-center md:flex-none md:justify-end">
+      <div className="relative z-20 mx-auto mt-4 flex w-full max-w-6xl flex-col items-center justify-center text-center">
         <motion.div
           initial={reduced ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -53,21 +53,21 @@ export function Hero() {
           <h1 className={cn("display-name", filled && "is-filled")}>
             {content.displayName}
           </h1>
-          <p className="mono mt-4 text-[11px] text-muted">
+          <p className="mono mt-3 text-[11px] text-muted">
             {content.role} · {content.schoolShort} · {content.yearMark}
           </p>
-          <p className="mt-2 max-w-md text-xs text-muted md:mx-auto md:text-sm">
+          <p className="mt-1.5 max-w-md text-xs text-muted md:mx-auto md:text-sm">
             {content.school}
           </p>
         </motion.div>
 
-        <div className="relative mt-8 h-52 w-full max-w-xl md:hidden">
+        <div className="relative mt-6 h-48 w-full max-w-xl md:hidden">
           <TopologyStage compact />
         </div>
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto mt-6 w-full max-w-6xl md:mt-10"
+        className="relative z-20 mx-auto mt-6 w-full max-w-6xl md:mt-8"
         initial={reduced ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: reduced ? 0 : 0.22, delay: introDelay }}
@@ -77,9 +77,9 @@ export function Hero() {
           <span className="accent-emphasis">{content.headlineEmphasis}</span>
           {after}
         </p>
-        <p className="mono mt-6 text-[11px] text-accent">{content.status}</p>
-        <p className="mt-3 text-sm text-muted">{content.previously}</p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <p className="mono mt-4 text-[11px] text-accent">{content.status}</p>
+        <p className="mt-2 text-sm text-muted">{content.previously}</p>
+        <div className="mt-6 flex flex-wrap gap-3">
           <a
             href="#work"
             className="border border-hairline bg-text px-4 py-2 text-sm text-bg"
@@ -99,7 +99,7 @@ export function Hero() {
         </div>
       </motion.div>
 
-      <p className="mono pointer-events-none absolute bottom-6 left-4 z-10 text-[10px] text-muted md:left-8">
+      <p className="mono pointer-events-none absolute bottom-4 left-4 z-10 text-[10px] text-muted md:left-8">
         Scroll
       </p>
     </section>

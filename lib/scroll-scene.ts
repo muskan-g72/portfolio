@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 type Listener = () => void;
 
 type ScrollScene = {
@@ -6,6 +8,7 @@ type ScrollScene = {
   handoff: number;
   works: number;
   activeProject: number;
+  is3DActive: boolean;
 };
 
 const state: ScrollScene = {
@@ -14,6 +17,7 @@ const state: ScrollScene = {
   handoff: 0,
   works: 0,
   activeProject: 0,
+  is3DActive: false,
 };
 
 const listeners = new Set<Listener>();
@@ -32,4 +36,12 @@ export function subscribeScrollScene(listener: Listener) {
   return () => {
     listeners.delete(listener);
   };
+}
+
+export function use3DActive() {
+  return useSyncExternalStore(
+    subscribeScrollScene,
+    () => state.is3DActive,
+    () => false,
+  );
 }

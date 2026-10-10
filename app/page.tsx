@@ -10,7 +10,7 @@ import { Works } from "@/components/works/Works";
 
 export default function Home() {
   return (
-    <main className="relative">
+    <main id="main-content" tabIndex={-1} className="relative outline-none">
       <HashOnLoad />
       <TopologyBackdrop />
       <Hero />

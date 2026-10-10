@@ -48,8 +48,6 @@ export const content: SiteContent = {
       "Technical documentation for the module.",
       "Implementation activities with the product team.",
     ],
-    certificateHref: "/certificates/campuspro.pdf",
-    certificateLabel: "View internship certificate",
   },
   skills: {
     Languages: ["Python", "C/C++", "TypeScript", "JavaScript", "SQL", "HTML", "CSS"],
@@ -68,7 +66,7 @@ export const content: SiteContent = {
     githubLabel: "github.com/muskan-g72",
     phone: "+91-9812463664",
   },
-  resumeHref: "/resume",
+  resumeHref: "/resume.pdf",
   nav: [
     { label: "Work", href: "/#work" },
     { label: "Experience", href: "/#experience" },
@@ -147,9 +145,9 @@ export const content: SiteContent = {
     {
       id: "browser",
       label: "Browser",
-      x: 70,
-      y: 300,
-      z: 0,
+      x: 920,
+      y: 35,
+      z: 0.1,
       annotation: {
         title: "Browser",
         body: ["Where operators start.", "UI is the first honest surface."],
@@ -159,9 +157,9 @@ export const content: SiteContent = {
     {
       id: "ui",
       label: "UI",
-      x: 210,
-      y: 180,
-      z: -0.3,
+      x: 960,
+      y: 75,
+      z: -0.1,
       annotation: {
         title: "UI",
         body: ["Dashboards for evidence, keys, budgets and runs."],
@@ -171,9 +169,9 @@ export const content: SiteContent = {
     {
       id: "api",
       label: "API",
-      x: 350,
-      y: 300,
-      z: 0,
+      x: 1010,
+      y: 115,
+      z: 0.1,
       annotation: {
         title: "API",
         body: ["Authenticated HTTP surface.", "Structured requests in, traces out."],
@@ -183,9 +181,9 @@ export const content: SiteContent = {
     {
       id: "auth",
       label: "Auth",
-      x: 490,
-      y: 160,
-      z: -0.4,
+      x: 940,
+      y: 185,
+      z: -0.2,
       annotation: {
         title: "Auth",
         body: ["JWT, API keys, virtual keys.", "Identity before work is admitted."],
@@ -195,9 +193,9 @@ export const content: SiteContent = {
     {
       id: "ratelimit",
       label: "Rate Limit",
-      x: 490,
-      y: 460,
-      z: 0.3,
+      x: 1080,
+      y: 195,
+      z: 0.2,
       annotation: {
         title: "Rate Limit",
         body: [
@@ -210,8 +208,8 @@ export const content: SiteContent = {
     {
       id: "budget",
       label: "Budget",
-      x: 640,
-      y: 280,
+      x: 1000,
+      y: 265,
       z: 0,
       annotation: {
         title: "Budget",
@@ -222,8 +220,8 @@ export const content: SiteContent = {
     {
       id: "executor",
       label: "Executor",
-      x: 790,
-      y: 300,
+      x: 1075,
+      y: 350,
       z: -0.2,
       annotation: {
         title: "Executor",
@@ -234,9 +232,9 @@ export const content: SiteContent = {
     {
       id: "provider",
       label: "Provider / DB",
-      x: 930,
-      y: 170,
-      z: -0.5,
+      x: 1105,
+      y: 435,
+      z: -0.4,
       annotation: {
         title: "Provider / DB",
         body: ["LLMs, PostgreSQL, Redis.", "The systems work is delegated to."],
@@ -244,11 +242,26 @@ export const content: SiteContent = {
       },
     },
     {
+      id: "campuspro",
+      label: "campuspro",
+      x: 890,
+      y: 395,
+      z: 0.5,
+      annotation: {
+        title: "campuspro",
+        body: [
+          "Employee Attendance Module.",
+          "Design, HRMS integration, database, testing.",
+        ],
+        usedIn: "CampusPro Technologies · 2026",
+      },
+    },
+    {
       id: "trace",
       label: "Trace",
-      x: 930,
-      y: 440,
-      z: 0.4,
+      x: 955,
+      y: 475,
+      z: 0.2,
       annotation: {
         title: "Trace",
         body: ["Verification → Evidence → Release."],
@@ -258,28 +271,13 @@ export const content: SiteContent = {
     {
       id: "response",
       label: "Response",
-      x: 1080,
-      y: 300,
+      x: 1045,
+      y: 535,
       z: 0,
       annotation: {
         title: "Response",
         body: ["Result, report, or rejection — with a reason."],
         usedIn: "Every system",
-      },
-    },
-    {
-      id: "campuspro",
-      label: "campuspro",
-      x: 350,
-      y: 520,
-      z: 0.8,
-      annotation: {
-        title: "campuspro",
-        body: [
-          "Employee Attendance Module.",
-          "Design, HRMS integration, database, testing.",
-        ],
-        usedIn: "CampusPro Technologies · 2026",
       },
     },
   ],
@@ -458,14 +456,18 @@ export const content: SiteContent = {
       decision:
         "Reserve budget with a PostgreSQL conditional UPDATE so admission is serialized in the database, not in application memory.",
       proof:
-        "Under a 10-request race, 1 request is admitted and 9 are rejected with zero oversubscription. Locust against real LLM providers measured 1.92 s average latency, P95 2.9 s, and 0% request failures.",
+        "Under a 10-request race, 1 request is admitted and 9 are rejected with zero oversubscription. Locust against real LLM providers measured 1.92 s average latency (including upstream provider time from Groq/Gemini), P95 2.9 s, and 0% request failures.",
       proofVisual: [
         "10 simultaneous requests",
         "1 admitted",
         "9 rejected",
         "zero oversubscription",
       ],
-      results: ["1.92 s average latency", "P95: 2.9 s", "0% request failures"],
+      results: [
+        "1.92 s average latency (includes upstream provider time from Groq/Gemini)",
+        "P95: 2.9 s",
+        "0% request failures",
+      ],
       learned:
         "If the budget check is not atomic, concurrent traffic will invent capacity that does not exist. Next, I would extend reservation traces so every rejection is as inspectable as an admission.",
       engineeringTruth:

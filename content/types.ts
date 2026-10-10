@@ -94,8 +94,6 @@ export type SiteContent = {
     project: string;
     bulletsPrimary: string[];
     bulletsMore: string[];
-    certificateHref: string;
-    certificateLabel: string;
   };
   skills: Record<string, string[]>;
   exploring: string;

@@ -4,11 +4,11 @@
   --bg: #0a0a0c;
   --surface: #111114;
   --text: #ece9e1;
-  --muted: #8d8b86;
+  --muted: #a5a39d;
   --hairline: rgba(255, 255, 255, 0.08);
   --accent: #ece9e1;
   --accent-from: #ece9e1;
-  --accent-to: #8d8b86;
+  --accent-to: #a5a39d;
   --ok: #3ddc84;
   --deny: #ff7a59;
 }

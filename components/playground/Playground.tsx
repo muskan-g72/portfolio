@@ -31,7 +31,12 @@ export function VeriGateTrace() {
 
   return (
     <div className="border border-hairline p-4">
-      <p className="mono text-[10px] text-muted">VeriGate</p>
+      <div className="flex items-center justify-between">
+        <p className="mono text-[10px] text-muted">VeriGate</p>
+        <span className="mono border border-hairline px-2 py-0.5 text-[9px] text-muted">
+          Simulated demo
+        </span>
+      </div>
       <h3 className="mt-2 text-xl tracking-[-0.03em]">Verification trace</h3>
       <p className="mt-2 text-sm text-muted">
         Evidence → PR checks → report. No invented pass rates.
@@ -105,7 +110,12 @@ export function RateLimiterDemo() {
 
   return (
     <div className="border border-hairline p-4">
-      <p className="mono text-[10px] text-muted">RateShield</p>
+      <div className="flex items-center justify-between">
+        <p className="mono text-[10px] text-muted">RateShield</p>
+        <span className="mono border border-hairline px-2 py-0.5 text-[9px] text-muted">
+          Simulated demo
+        </span>
+      </div>
       <h3 className="mt-2 text-xl tracking-[-0.03em]">Sliding-window limiter</h3>
       <p className="mt-2 text-sm text-muted">
         10 second rolling window · 8 request limit
@@ -189,7 +199,12 @@ export function OrchestrixRace() {
 
   return (
     <div className="border border-hairline p-4">
-      <p className="mono text-[10px] text-muted">Orchestrix</p>
+      <div className="flex items-center justify-between">
+        <p className="mono text-[10px] text-muted">Orchestrix</p>
+        <span className="mono border border-hairline px-2 py-0.5 text-[9px] text-muted">
+          Simulated demo
+        </span>
+      </div>
       <h3 className="mt-2 text-xl tracking-[-0.03em]">Execution topology</h3>
       <ol className="mt-4 space-y-2">
         {PIPELINE.map((stage, index) => {
@@ -258,6 +273,9 @@ export function OrchestrixRace() {
           <p className="mt-1">{result.admitted} admitted</p>
           <p>{result.rejected} rejected</p>
           <p className="mt-2 text-muted">zero oversubscription</p>
+          <p className="mono mt-2 border-t border-hairline pt-2 text-[10px] text-muted">
+            Recorded results from benchmarks in the repo
+          </p>
         </div>
       ) : null}
     </div>
@@ -275,7 +293,12 @@ export function TaskForgeChart() {
 
   return (
     <div className="border border-hairline p-4">
-      <p className="mono text-[10px] text-muted">TaskForge</p>
+      <div className="flex items-center justify-between">
+        <p className="mono text-[10px] text-muted">TaskForge</p>
+        <span className="mono border border-hairline px-2 py-0.5 text-[9px] text-muted">
+          Recorded results from benchmarks in the repo
+        </span>
+      </div>
       <h3 className="mt-2 text-xl tracking-[-0.03em]">Throughput</h3>
       <p className="mt-2 text-sm text-muted">
         Measured jobs / s. No interpolated values.

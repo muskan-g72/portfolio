@@ -83,11 +83,31 @@ export function Graph2D({ activeId, onSelect, compact, className }: Props) {
     )
     .join(" ");
 
+  const bounds = useMemo(() => {
+    if (!compact) {
+      return { minX: 0, minY: 0, width: 1160, height: 580 };
+    }
+    const xs = nodes.map((n) => n.x);
+    const ys = nodes.map((n) => n.y);
+    const padX = 50;
+    const padY = 30;
+    const minX = Math.max(0, Math.min(...xs) - padX);
+    const maxX = Math.min(1160, Math.max(...xs) + padX);
+    const minY = Math.max(0, Math.min(...ys) - padY);
+    const maxY = Math.min(580, Math.max(...ys) + padY);
+    return {
+      minX,
+      minY,
+      width: Math.max(1, maxX - minX),
+      height: Math.max(1, maxY - minY),
+    };
+  }, [compact, nodes]);
+
   return (
     <div className={cn("relative h-full w-full", className)}>
       <svg
         ref={svgRef}
-        viewBox="0 0 1160 580"
+        viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
         className="h-full w-full"
         aria-hidden
       >
@@ -136,8 +156,8 @@ export function Graph2D({ activeId, onSelect, compact, className }: Props) {
               selected ? "text-[#ece9e1]" : "text-[#ece9e1]/70",
             )}
             style={{
-              left: `${(node.x / 1160) * 100}%`,
-              top: `${(node.y / 580) * 100}%`,
+              left: `${((node.x - bounds.minX) / bounds.width) * 100}%`,
+              top: `${((node.y - bounds.minY) / bounds.height) * 100}%`,
             }}
           >
             <span
