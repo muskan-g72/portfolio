@@ -231,7 +231,8 @@ export function createScene(root: HTMLElement): (() => void) | null {
       return function (dt, time) {
         items.forEach(function (it, k) {
           const far = camZNow - (grp.position.z + PANEL_OFF[k][2]);
-          const base = clamp((140 - far) / 50, 0, 1) * clamp((far - 1) / 5, 0, 1);
+          /* A panel is never allowed to precede its camera stop as a distant speck. */
+          const base = clamp((60 - far) / 25, 0, 1) * clamp((far - 1) / 5, 0, 1);
           const emph = 0.35 + 0.65 * clamp(1 - Math.abs(k - slideF) * 0.9, 0, 1);
           const o = base * emph;
           (it.back.material as THREE.Material).opacity = 0.88 * o; (it.img.material as THREE.Material).opacity = o * 0.96; (it.frame.material as THREE.Material).opacity = 0.9 * o; (it.frame2.material as THREE.Material).opacity = 0.25 * o; (it.glow.material as THREE.Material).opacity = 0.34 * o;
@@ -338,7 +339,14 @@ export function createScene(root: HTMLElement): (() => void) | null {
     const pick = new THREE.Mesh(new THREE.SphereGeometry(d.r * 1.15, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
     grp.add(pick);
     scene.add(grp);
-    return { grp: grp, body: pick, halo: halo, update: update, d: d, stop: entry, hover: 0 };
+    const materials: Array<{ material: THREE.Material; opacity: number }> = [];
+    grp.traverse(function (object) {
+      const material = (object as THREE.Mesh).material;
+      (material ? (Array.isArray(material) ? material : [material]) : []).forEach(function (entry) {
+        materials.push({ material: entry, opacity: entry.opacity });
+      });
+    });
+    return { grp: grp, body: pick, halo: halo, update: update, d: d, stop: entry, hover: 0, materials: materials };
   });
 
   /* ---------- camera keyframes ---------- */
@@ -445,13 +453,17 @@ export function createScene(root: HTMLElement): (() => void) | null {
     for (let i = 0; i < planets.length; i++) {
       const p = planets[i];
       p.hover += ((i === hoverIdx ? 1 : 0) - p.hover) * 0.12;
-      const far = camZ - p.d.z;
-      const win = p.stop.appearWindow === 'first' ? clamp((62 - far) / 22, 0, 1) : p.stop.appearWindow === 'contact' ? clamp((50 - far) / 15, 0, 1) : clamp((110 - far) / 35, 0, 1);
-      const appear = smooth(win);
-      p.grp.visible = appear > 0.001;
-      p.grp.scale.setScalar((1 + p.hover * 0.05) * (0.3 + 0.7 * appear));
+      const isCurrent = active?.id === p.stop.id;
+      const isIncoming = !active && next.id === p.stop.id;
+      /* Upcoming destinations are absent for the first half of a flight, then fade
+         and grow together. Every non-current, non-incoming destination is not drawn. */
+      const appear = isIncoming ? smooth(clamp((transition - 0.5) / 0.5, 0, 1)) : isCurrent ? 1 : 0;
+      p.grp.visible = appear > 0;
+      p.grp.scale.setScalar((1 + p.hover * 0.05) * (isIncoming ? appear : 1));
       p.halo.material.opacity = 0.18 + p.hover * 0.22 + (active?.id === p.stop.id ? 0.1 : 0);
       if (p.grp.visible) p.update(reduce ? 0 : dt, time, reduce, sceneState);
+      if (isIncoming) p.materials.forEach(function (entry) { entry.material.opacity = entry.opacity * appear; });
+      else if (!isCurrent) p.materials.forEach(function (entry) { entry.material.opacity = entry.opacity; });
     }
 
     ray.setFromCamera(mouse, cam);
