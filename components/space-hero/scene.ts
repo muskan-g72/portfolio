@@ -469,15 +469,15 @@ export function createScene(root: HTMLElement): (() => void) | null {
     if (key !== stageNow) {
       stageNow = key;
       if (show) {
-        const id = active?.id as StopId, isWork = id === 'work', isAbout = id === 'about';
+        const id = active?.id as StopId, isWork = id === 'work', isAbout = id === 'about', isExperience = id === 'experience';
         const pj = PROJECTS[subIndex], about = ABOUT_SLIDES[subIndex], experience = EXPERIENCE_SLIDES[subIndex];
         const stopNumber = String(STOPS.indexOf(stop(id))).padStart(2, '0');
         capIdx.textContent = `${stopNumber} / ${String(LAST).padStart(2, '0')}${isWork ? `  ·  WORK  ·  PROJECT ${String(subIndex + 1).padStart(2, '0')} / ${String(PROJECTS.length).padStart(2, '0')}` : isAbout ? `  ·  ABOUT  ·  ${String(subIndex + 1).padStart(2, '0')} / ${String(ABOUT_SLIDES.length).padStart(2, '0')}` : ''}`;
-        capName.textContent = isWork ? pj.name : isAbout ? about.title : experience.title;
+        capName.textContent = isWork ? pj.name : isAbout ? about.title : isExperience ? experience.title : 'CONTACT';
         capName.style.color = isWork ? pj.color : '';
         caption.classList.toggle('long-title', isAbout && subIndex === 0);
-        capDesc.textContent = isWork ? pj.desc : isAbout ? about.lines.join(' ') : `${experience.company} · ${experience.location} · ${experience.dates}\n${experience.lines.join(' ')}`;
-        tagEl.textContent = isWork ? pj.tag : isAbout ? '' : experience.tag;
+        capDesc.textContent = isWork ? pj.desc : isAbout ? about.lines.join(' ') : isExperience ? `${experience.company} · ${experience.location} · ${experience.dates}\n${experience.lines.join(' ')}` : 'Open to SWE internships. The résumé is one click away.';
+        tagEl.textContent = isWork ? pj.tag : isAbout ? '' : isExperience ? experience.tag : '';
         chipsEl.innerHTML = '';
         (isWork ? pj.metrics : isAbout ? about.chips : []).forEach(function (m) { const sp = document.createElement('span'); sp.textContent = m; sp.style.setProperty('--chip', isWork ? pj.color + '66' : 'var(--line)'); chipsEl.appendChild(sp); });
         capProjectLinks.textContent = '';
