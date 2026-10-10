@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STAGES, PROJECTS } from './content';
+import { ABOUT_SLIDES, EXPERIENCE_SLIDES, PROJECTS, STOPS, type Stop, type StopId } from './content';
 
 /* Port of the <script> body of muskan-space.html (REFERENCE, three.js r128).
    Logic, constants, shaders, colours and timings are unchanged. Differences are limited to:
@@ -7,8 +7,9 @@ import { STAGES, PROJECTS } from './content';
    cleanup/disposal, pausing while the tab is hidden, the contact-links row, and returning null without WebGL. */
 
 interface Vec3 { x: number; y: number; z: number }
-interface Obj { x: number; y: number; z: number; r: number; kind: string; dist?: number; halo?: number }
-type Updater = (dt: number, time: number, reduce: boolean) => void;
+type Obj = Stop['position'] & { kind: Stop['kind'] };
+interface SceneState { active: StopId | null; subIndex: number; subProgress: number; pointerX: number; pointerY: number; }
+type Updater = (dt: number, time: number, reduce: boolean, state: SceneState) => void;
 type Builder = (d: Obj, grp: THREE.Group) => Updater;
 interface DeckItem {
   g: THREE.Group; back: THREE.Mesh; img: THREE.Mesh; frame: THREE.LineSegments; frame2: THREE.LineSegments;
@@ -17,7 +18,9 @@ interface DeckItem {
 type AnyMat = THREE.Material & { map?: THREE.Texture | null };
 
 export function createScene(root: HTMLElement): (() => void) | null {
-  const LAST = STAGES.length - 1;
+  const LAST = STOPS.length - 1;
+  const stop = (id: StopId) => STOPS.find((entry) => entry.id === id) as Stop;
+  const orderedStops = STOPS.filter((entry) => entry.id !== 'home');
   const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   function clamp(v: number, a: number, b: number) { return Math.min(b, Math.max(a, v)); }
   function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
@@ -38,7 +41,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
 
   const $ = (id: string) => root.querySelector('#' + id) as HTMLElement;
   const copy = $('copy'), caption = $('caption');
-  const capIdx = $('capIdx'), capName = $('capName'), capDesc = $('capDesc'), capCta = $('capCta'), capLinks = $('capLinks'), chipsEl = $('chips'), tagEl = $('capTag'), ticksEl = $('ticks');
+  const capIdx = $('capIdx'), capName = $('capName'), capDesc = $('capDesc'), capCta = $('capCta'), capLinks = $('capLinks'), capProjectLinks = $('capProjectLinks'), chipsEl = $('chips'), tagEl = $('capTag'), ticksEl = $('ticks');
   const distEl = $('dist');
   const dotsEl = $('dots');
 
@@ -47,33 +50,38 @@ export function createScene(root: HTMLElement): (() => void) | null {
   let raf = 0;
 
   function maxScroll() { return Math.max(1, document.documentElement.scrollHeight - window.innerHeight); }
-  const ANCH = [[0, 0.02], [0.14, 0.52], [0.66, 0.69], [0.82, 0.85], [0.98, 1]];
-  function tFor(i: number) { return i === 0 ? 0 : (i === 1 ? ANCH[1][0] + 0.004 : (ANCH[i][0] + ANCH[i][1]) / 2); }
+  function tFor(id: StopId) { const entry = stop(id); return id === 'home' ? 0 : (entry.anchor[0] + entry.anchor[1]) / 2; }
   function goT(tt: number) { window.scrollTo({ top: tt * maxScroll(), behavior: reduce ? 'auto' : 'smooth' }); }
-  function goTo(i: number) { goT(tFor(i)); }
+  function goTo(id: StopId) { goT(tFor(id)); }
 
   root.querySelectorAll<HTMLElement>('[data-go]').forEach(function (b) {
-    const fn = function () { goTo(+(b.getAttribute('data-go') as string)); };
+    const fn = function () { goTo(b.getAttribute('data-go') as StopId); };
     b.addEventListener('click', fn);
     cleanups.push(function () { b.removeEventListener('click', fn); });
   });
   const navBtns = root.querySelectorAll<HTMLElement>('.nav ul button');
 
   dotsEl.textContent = '';
-  const dotBtns = STAGES.map(function (s, i) {
+  const dotBtns = STOPS.map(function (s) {
     const b = document.createElement('button');
     b.type = 'button'; b.setAttribute('aria-label', s.name);
     b.innerHTML = '<span>' + s.name + '</span><i></i>';
-    b.addEventListener('click', function () { goTo(i); });
+    b.addEventListener('click', function () { goTo(s.id); });
     dotsEl.appendChild(b);
     return b;
   });
 
   ticksEl.textContent = '';
+  const tickStops: Array<{ id: StopId; index: number }> = [];
+  ABOUT_SLIDES.forEach(function (slide, index) {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', slide.title);
+    b.addEventListener('click', function () { const entry = stop('about'); goT(entry.anchor[0] + ((index + 0.3) / ABOUT_SLIDES.length) * (entry.anchor[1] - entry.anchor[0])); });
+    ticksEl.appendChild(b); tickStops.push({ id: 'about', index });
+  });
   PROJECTS.forEach(function (pj, k) {
     const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', pj.name);
-    b.addEventListener('click', function () { goT(ANCH[1][0] + ((k + 0.3) / 4) * (ANCH[1][1] - ANCH[1][0])); });
-    ticksEl.appendChild(b);
+    b.addEventListener('click', function () { const entry = stop('work'); goT(entry.anchor[0] + ((k + 0.3) / PROJECTS.length) * (entry.anchor[1] - entry.anchor[0])); });
+    ticksEl.appendChild(b); tickStops.push({ id: 'work', index: k });
   });
   let target = 0;
   function readScroll() { target = clamp(window.scrollY / maxScroll(), 0, 1); }
@@ -255,16 +263,49 @@ export function createScene(root: HTMLElement): (() => void) | null {
     crystal: function (d, grp) {
       const outer = new THREE.IcosahedronGeometry(d.r * 0.9, 1), inner = new THREE.IcosahedronGeometry(d.r * 0.5, 0);
       const o = new THREE.Group(), n = new THREE.Group();
-      o.add(new THREE.LineSegments(new THREE.EdgesGeometry(outer), new THREE.LineBasicMaterial({ color: 0xf5b8d6, transparent: true, opacity: 0.8 })));
+      const edges = new THREE.EdgesGeometry(outer);
+      const shell = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xf5b8d6, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending }));
+      const vertices = new THREE.Points(outer, new THREE.PointsMaterial({ size: 0.34, map: GLOW, color: 0xffd6e8, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+      o.add(shell);
       o.add(new THREE.Mesh(outer, mat(0xe27ba6, 0.07)));
-      o.add(new THREE.Points(outer, new THREE.PointsMaterial({ size: 0.34, map: GLOW, color: 0xffd6e8, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })));
+      o.add(vertices);
       n.add(new THREE.LineSegments(new THREE.EdgesGeometry(inner), new THREE.LineBasicMaterial({ color: 0xffe9f3, transparent: true, opacity: 0.95 })));
-      n.add(new THREE.Mesh(inner, mat(0xffc0dc, 0.12)));
-      grp.add(o, n, sprite(0xe27ba6, d.r * 1.8, 0.4));
+      const core = new THREE.Mesh(inner, mat(0xffc0dc, 0.12)); n.add(core);
+      const halo = sprite(0xe27ba6, d.r * 1.8, 0.4); grp.add(o, n, halo);
       const orbit = new THREE.Mesh(new THREE.TorusGeometry(d.r * 1.35, 0.012, 10, 160), mat(0xf5b8d6, 0.5)); orbit.rotation.x = 1.25; orbit.rotation.y = 0.3; grp.add(orbit);
-      const ob = new THREE.Group(); ob.rotation.x = 1.25; ob.rotation.y = 0.3; const spin = new THREE.Group();
-      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffe3ef })); bead.position.x = d.r * 1.35; spin.add(bead); ob.add(spin); grp.add(ob);
-      return function (dt) { o.rotation.y += dt * 0.12; o.rotation.x += dt * 0.04; n.rotation.y -= dt * 0.2; n.rotation.z += dt * 0.07; spin.rotation.z += dt * 0.5; };
+      const awards = ABOUT_SLIDES[1].lines;
+      const beads = awards.map(function (_, index) {
+        const orbitGroup = new THREE.Group(), spin = new THREE.Group();
+        orbitGroup.rotation.set(0.62 + index * 0.37, 0.2 + index * 0.58, index * 0.23);
+        const radius = d.r * (1.25 + index * 0.175);
+        const bead = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffe3ef, transparent: true }));
+        const glow = sprite(0xffb9dc, 0.85, 0.25); bead.position.x = radius; glow.position.x = radius; spin.add(bead, glow); orbitGroup.add(spin); grp.add(orbitGroup);
+        return { spin, bead, glow, speed: 0.3 + index * 0.11 };
+      });
+      const edgePositions = edges.attributes.position;
+      const pulses = [0, 1, 2].map(function (index) { const point = sprite(0xffd6e8, 0.72, 0.9); o.add(point); return { point, edge: index, phase: index * 0.31, duration: 1.5 + index * 0.6 }; });
+      let aboutEnteredAt: number | null = null;
+      return function (dt, time, reduced, state) {
+        const active = state.active === 'about';
+        if (active && aboutEnteredAt === null) aboutEnteredAt = time;
+        if (!active) aboutEnteredAt = null;
+        const build = reduced ? 1 : active ? clamp((time - (aboutEnteredAt || time)) / 1.4, 0, 1) : 0;
+        shell.geometry.setDrawRange(0, Math.floor((shell.geometry.attributes.position.count / 2) * build) * 2);
+        (vertices.material as THREE.PointsMaterial).opacity = build;
+        const opening = active ? smooth(clamp(state.subProgress, 0, 1)) : 0;
+        const scale = 1 + 0.025 * Math.sin(time * 0.8) + opening * 0.095;
+        o.scale.setScalar(reduced ? 1 + opening * 0.12 : scale);
+        o.rotation.y += dt * 0.12 + opening * 0.0005;
+        o.rotation.x += dt * 0.04; o.rotation.y += opening * Math.PI / 3 * 0.012;
+        n.rotation.y -= dt * 0.2; n.rotation.z += dt * 0.07;
+        (core.material as THREE.MeshBasicMaterial).opacity = reduced ? 0.12 + opening * 0.08 : 0.08 + (0.12 * (0.5 + 0.5 * Math.sin(time * 1.6))) + opening * 0.06;
+        (halo.material as THREE.SpriteMaterial).opacity = 0.4 + opening * 0.2;
+        grp.rotation.x += ((reduced ? 0 : -state.pointerY * 0.12) - grp.rotation.x) * 0.08;
+        grp.rotation.y += ((reduced ? 0 : state.pointerX * 0.12) - grp.rotation.y) * 0.08;
+        const activeAward = Math.min(Math.floor(clamp(state.subProgress - 1, 0, 0.999) * beads.length), beads.length - 1);
+        beads.forEach(function (item, index) { const selected = active && state.subIndex === 1 && index === activeAward; item.spin.rotation.z += reduced ? 0 : dt * item.speed; item.bead.scale.setScalar(selected ? 1.8 : 1); (item.bead.material as THREE.MeshBasicMaterial).opacity = active && state.subIndex === 1 ? (selected ? 1 : 0.28) : 0.2; (item.glow.material as THREE.SpriteMaterial).opacity = active && state.subIndex === 1 ? (selected ? 0.9 : 0.14) : 0.12; });
+        pulses.forEach(function (pulse) { if (reduced || !active) { pulse.point.visible = false; return; } pulse.point.visible = true; const segments = edgePositions.count / 2; const cycle = ((time + pulse.phase) % pulse.duration) / pulse.duration; const edge = (pulse.edge + Math.floor((time + pulse.phase) / pulse.duration)) % segments; const a = edge * 2, b = a + 1; pulse.point.position.set(lerp(edgePositions.getX(a), edgePositions.getX(b), cycle), lerp(edgePositions.getY(a), edgePositions.getY(b), cycle), lerp(edgePositions.getZ(a), edgePositions.getZ(b), cycle)); });
+      };
     },
     /* CONTACT: a Möbius loop drawn as a fine mesh, one continuous surface */
     mobius: function (d, grp) {
@@ -286,35 +327,33 @@ export function createScene(root: HTMLElement): (() => void) | null {
     }
   };
 
-  const DATA: Obj[] = [
-    { x: 6.2, y: -0.4, z: -70, r: 3.9, dist: 17, kind: 'deck', halo: 0x8fb8ff },
-    { x: 7.0, y: 1.0, z: -170, r: 3.8, dist: 25, kind: 'aizawa', halo: 0x5f8fff },
-    { x: 4.6, y: -1.2, z: -246, r: 3.9, dist: 24, kind: 'crystal', halo: 0xe27ba6 },
-    { x: 6.5, y: 0.6, z: -322, r: 3.6, dist: 24, kind: 'mobius', halo: 0x58e0b8 }
-  ];
-  const HERO: Obj = { x: 5.2, y: 0.1, z: -26, r: 4.0, kind: 'knot' };
+  const HERO: Obj = { ...stop('home').position, kind: 'knot' };
   const heroGrp = new THREE.Group(); heroGrp.position.set(HERO.x, HERO.y, HERO.z); scene.add(heroGrp);
   const heroUpdate = builders.knot(HERO, heroGrp);
-  const planets = DATA.map(function (d) {
+  const planets = orderedStops.map(function (entry) {
+    const d: Obj = { ...entry.position, kind: entry.kind };
     const grp = new THREE.Group(); grp.position.set(d.x, d.y, d.z);
     const halo = sprite(d.halo as number, d.r * 4.2, 0.2); grp.add(halo);
     const update = builders[d.kind](d, grp);
     const pick = new THREE.Mesh(new THREE.SphereGeometry(d.r * 1.15, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
     grp.add(pick);
     scene.add(grp);
-    return { grp: grp, body: pick, halo: halo, update: update, d: d, hover: 0 };
+    return { grp: grp, body: pick, halo: halo, update: update, d: d, stop: entry, hover: 0 };
   });
 
   /* ---------- camera keyframes ---------- */
   let narrow = false;
   let WK: Vec3[] = [];
+  let KF: Record<StopId, Vec3>;
   function keyframes() {
-    const offX = narrow ? 0 : 6.0, yo = narrow ? 4.2 : 0, wyo = narrow ? 5.2 : 0, k: Vec3[] = [{ x: narrow ? 4.2 : 0, y: narrow ? 5.2 : 0, z: 0 }];
-    DATA.forEach(function (d) { const dist = (d.dist || 21) + (narrow ? 6 : 0); k.push({ x: d.x - offX, y: d.y * 0.5 + yo, z: d.z + dist }); });
-    WK = PANEL_OFF.map(function (o) { const d = DATA[0], dist = (d.dist as number) + (narrow ? 6 : 0); return { x: d.x + o[0] - (narrow ? 0 : 4.6), y: (d.y + o[1]) * 0.5 + wyo, z: d.z + o[2] + dist }; });
+    const offX = narrow ? 0 : 6.0, yo = narrow ? 4.2 : 0, wyo = narrow ? 5.2 : 0;
+    const k = {} as Record<StopId, Vec3>;
+    STOPS.forEach(function (entry) { const d = entry.position, dist = (d.dist || 21) + (narrow ? 6 : 0); k[entry.id] = entry.id === 'home' ? { x: narrow ? 4.2 : 0, y: narrow ? 5.2 : 0, z: 0 } : { x: d.x - offX, y: d.y * 0.5 + yo, z: d.z + dist }; });
+    const work = stop('work').position, dist = (work.dist as number) + (narrow ? 6 : 0);
+    WK = PANEL_OFF.map(function (o) { return { x: work.x + o[0] - (narrow ? 0 : 4.6), y: (work.y + o[1]) * 0.5 + wyo, z: work.z + o[2] + dist }; });
     return k;
   }
-  let KF = keyframes();
+  KF = keyframes();
 
   let W = 1, H = 1;
   function resize() {
@@ -342,11 +381,11 @@ export function createScene(root: HTMLElement): (() => void) | null {
   const onPointerLeave = function () { mTarget.set(9, 9); };
   window.addEventListener('pointerleave', onPointerLeave);
   cleanups.push(function () { window.removeEventListener('pointerleave', onPointerLeave); });
-  const onCanvasClick = function () { if (hoverIdx >= 0) goTo(hoverIdx + 1); };
+  const onCanvasClick = function () { if (hoverIdx >= 0) goTo(planets[hoverIdx].stop.id); };
   canvas.addEventListener('click', onCanvasClick);
   cleanups.push(function () { canvas.removeEventListener('click', onCanvasClick); });
 
-  let t = 0, fov = FOV, stageNow = '', curNow = -1, last = performance.now();
+  let t = 0, fov = FOV, stageNow = '', curNow = '', last = performance.now();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const tPrev = 0; /* unused in REFERENCE */
   let tPrev0 = 0;
@@ -362,25 +401,30 @@ export function createScene(root: HTMLElement): (() => void) | null {
     const time = now / 1000;
     t = reduce ? target : t + (target - t) * (1 - Math.pow(0.001, dt));
 
-    let i0 = 0, u = 0, stage = 0, hold = true, i2: number;
-    for (i2 = 0; i2 <= LAST; i2++) if (t <= ANCH[i2][1]) break;
-    if (i2 > LAST) i2 = LAST;
-    if (t >= ANCH[i2][0]) { stage = i2; i0 = i2; } else { i0 = i2 - 1; stage = -1; u = smooth((t - ANCH[i0][1]) / (ANCH[i2][0] - ANCH[i0][1])); }
-    let kk = 0;
+    const next = STOPS.find((entry) => t <= entry.anchor[1]) || stop('contact');
+    const active = t >= next.anchor[0] ? next : null;
+    const previous = active ? active : STOPS[STOPS.indexOf(next) - 1];
+    const transition = active ? 0 : smooth((t - previous.anchor[1]) / (next.anchor[0] - previous.anchor[1]));
+    const slideCount = active?.id === 'work' ? PROJECTS.length : active?.id === 'about' ? ABOUT_SLIDES.length : 1;
+    const dwellProgress = active ? clamp((t - active.anchor[0]) / (active.anchor[1] - active.anchor[0]), 0, 1) : 0;
+    const slidePosition = dwellProgress * slideCount;
+    const subIndex = Math.min(Math.floor(slidePosition), slideCount - 1);
+    const subLocal = slidePosition - subIndex;
+    const subProgress = subIndex + (subIndex < slideCount - 1 ? smooth(clamp((subLocal - 0.6) / 0.4, 0, 1)) : 0);
+    const hold = subIndex === slideCount - 1 || subLocal < 0.6;
     let camX: number, camY: number, camZ: number;
-    if (stage === 1) {
-      const pp = clamp((t - ANCH[1][0]) / (ANCH[1][1] - ANCH[1][0]), 0, 1), sf = pp * 4, k0 = Math.min(Math.floor(sf), 3), loc = sf - k0;
-      slideF = k0 + (k0 < 3 ? smooth(clamp((loc - 0.6) / 0.4, 0, 1)) : 0); kk = k0; hold = k0 === 3 || loc < 0.6;
-      const ka = Math.floor(slideF), fr = slideF - ka, A0 = WK[ka], B0 = WK[Math.min(ka + 1, 3)];
+    if (active?.id === 'work') {
+      slideF = subProgress;
+      const ka = Math.floor(slideF), fr = slideF - ka, A0 = WK[ka], B0 = WK[Math.min(ka + 1, PROJECTS.length - 1)];
       camX = lerp(A0.x, B0.x, fr); camY = lerp(A0.y, B0.y, fr); camZ = lerp(A0.z, B0.z, fr);
-    } else if (stage >= 0) {
-      const K = KF[stage]; camX = K.x; camY = K.y; camZ = K.z; slideF = stage < 1 ? 0 : 3;
+    } else if (active) {
+      const K = KF[active.id]; camX = K.x; camY = K.y; camZ = K.z; slideF = 0;
     } else {
-      const from = i0 === 1 ? WK[3] : KF[i0], to = i0 + 1 === 1 ? WK[0] : KF[i0 + 1];
-      camX = lerp(from.x, to.x, u); camY = lerp(from.y, to.y, u); camZ = lerp(from.z, to.z, u); slideF = i0 < 1 ? 0 : 3;
+      const from = previous.id === 'work' ? WK[PROJECTS.length - 1] : KF[previous.id], to = next.id === 'work' ? WK[0] : KF[next.id];
+      camX = lerp(from.x, to.x, transition); camY = lerp(from.y, to.y, transition); camZ = lerp(from.z, to.z, transition); slideF = previous.id === 'work' ? PROJECTS.length - 1 : 0;
     }
     camZNow = camZ;
-    const seg = stage >= 0 ? stage : (u < 0.5 ? i0 : i0 + 1);
+    const visibleStop = active || (transition < 0.5 ? previous : next);
     const speed = dt > 0 ? Math.abs(t - tPrev0) / dt : 0; tPrev0 = t;
     const wantFov = FOV + clamp(speed * 28, 0, 9);
     fov += (wantFov - fov) * 0.08;
@@ -396,15 +440,18 @@ export function createScene(root: HTMLElement): (() => void) | null {
 
     const hs = 1 - smooth(clamp(-camZ / 16, 0, 1));
     heroGrp.visible = hs > 0.001; heroGrp.scale.setScalar(0.4 + 0.6 * hs);
-    if (heroGrp.visible) heroUpdate(reduce ? 0 : dt, time, reduce);
+    const sceneState: SceneState = { active: active?.id || null, subIndex, subProgress, pointerX: cx, pointerY: cy };
+    if (heroGrp.visible) heroUpdate(reduce ? 0 : dt, time, reduce, sceneState);
     for (let i = 0; i < planets.length; i++) {
       const p = planets[i];
       p.hover += ((i === hoverIdx ? 1 : 0) - p.hover) * 0.12;
-      const far = camZ - p.d.z, win = i === 0 ? clamp((62 - far) / 22, 0, 1) : (i === 1 ? clamp((40 - far) / 15, 0, 1) : clamp((110 - far) / 35, 0, 1)), appear = smooth(win);
+      const far = camZ - p.d.z;
+      const win = p.stop.appearWindow === 'first' ? clamp((62 - far) / 22, 0, 1) : p.stop.appearWindow === 'contact' ? clamp((50 - far) / 15, 0, 1) : clamp((110 - far) / 35, 0, 1);
+      const appear = smooth(win);
       p.grp.visible = appear > 0.001;
       p.grp.scale.setScalar((1 + p.hover * 0.05) * (0.3 + 0.7 * appear));
-      p.halo.material.opacity = 0.18 + p.hover * 0.22 + (stage === i + 1 ? 0.1 : 0);
-      if (p.grp.visible) p.update(reduce ? 0 : dt, time, reduce);
+      p.halo.material.opacity = 0.18 + p.hover * 0.22 + (active?.id === p.stop.id ? 0.1 : 0);
+      if (p.grp.visible) p.update(reduce ? 0 : dt, time, reduce, sceneState);
     }
 
     ray.setFromCamera(mouse, cam);
@@ -417,28 +464,40 @@ export function createScene(root: HTMLElement): (() => void) | null {
     copy.style.transform = 'translateY(calc(' + (narrow ? '0%' : '-52%') + ' + ' + ((1 - home) * -40).toFixed(1) + 'px))';
     copy.style.pointerEvents = home > 0.5 ? 'auto' : 'none';
 
-    const show = stage >= 2 || (stage === 1 && hold);
-    const key = (stage === 1 ? '1:' + kk : String(stage)) + (show ? 'y' : 'n');
+    const show = Boolean(active && active.id !== 'home' && (active.id !== 'work' || hold));
+    const key = (active ? `${active.id}:${subIndex}` : 'transition') + (show ? 'y' : 'n');
     if (key !== stageNow) {
       stageNow = key;
       if (show) {
-        const isW = stage === 1, pj = PROJECTS[kk];
-        capIdx.textContent = String(stage).padStart(2, '0') + ' / ' + String(LAST).padStart(2, '0') + (isW ? '  ·  WORK  ·  PROJECT ' + String(kk + 1).padStart(2, '0') + ' / 04' : '');
-        capName.textContent = isW ? pj.name : STAGES[stage].name; capName.style.color = isW ? pj.color : '';
-        capDesc.textContent = isW ? pj.desc : STAGES[stage].desc;
-        tagEl.textContent = isW ? pj.tag : '';
-        chipsEl.innerHTML = ''; if (isW) pj.metrics.forEach(function (m) { const sp = document.createElement('span'); sp.textContent = m; sp.style.setProperty('--chip', pj.color + '66'); chipsEl.appendChild(sp); });
-        ticksEl.classList.toggle('on', isW);
-        ticksEl.querySelectorAll('button').forEach(function (bn, j) { bn.classList.toggle('on', j === kk); bn.style.setProperty('--tick', pj.color); });
-        capCta.classList.toggle('on', stage === LAST);
-        capLinks.classList.toggle('on', stage === LAST);
+        const id = active?.id as StopId, isWork = id === 'work', isAbout = id === 'about';
+        const pj = PROJECTS[subIndex], about = ABOUT_SLIDES[subIndex], experience = EXPERIENCE_SLIDES[subIndex];
+        const stopNumber = String(STOPS.indexOf(stop(id))).padStart(2, '0');
+        capIdx.textContent = `${stopNumber} / ${String(LAST).padStart(2, '0')}${isWork ? `  ·  WORK  ·  PROJECT ${String(subIndex + 1).padStart(2, '0')} / ${String(PROJECTS.length).padStart(2, '0')}` : isAbout ? `  ·  ABOUT  ·  ${String(subIndex + 1).padStart(2, '0')} / ${String(ABOUT_SLIDES.length).padStart(2, '0')}` : ''}`;
+        capName.textContent = isWork ? pj.name : isAbout ? about.title : experience.title;
+        capName.style.color = isWork ? pj.color : '';
+        caption.classList.toggle('long-title', isAbout && subIndex === 0);
+        capDesc.textContent = isWork ? pj.desc : isAbout ? about.lines.join(' ') : `${experience.company} · ${experience.location} · ${experience.dates}\n${experience.lines.join(' ')}`;
+        tagEl.textContent = isWork ? pj.tag : isAbout ? '' : experience.tag;
+        chipsEl.innerHTML = '';
+        (isWork ? pj.metrics : isAbout ? about.chips : []).forEach(function (m) { const sp = document.createElement('span'); sp.textContent = m; sp.style.setProperty('--chip', isWork ? pj.color + '66' : 'var(--line)'); chipsEl.appendChild(sp); });
+        capProjectLinks.textContent = '';
+        if (isWork) {
+          const links = [{ label: 'LIVE DEMO ↗', href: pj.live }, { label: 'GITHUB ↗', href: pj.github }];
+          links.forEach(function (link) { if (!link.href) return; const a = document.createElement('a'); a.href = link.href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = link.label; capProjectLinks.appendChild(a); });
+        }
+        capProjectLinks.classList.toggle('on', isWork);
+        const hasTicks = isWork || isAbout;
+        ticksEl.classList.toggle('on', hasTicks);
+        ticksEl.querySelectorAll('button').forEach(function (bn, j) { const item = tickStops[j]; const on = item.id === id && item.index === subIndex; bn.classList.toggle('on', on); bn.style.display = item.id === id ? '' : 'none'; bn.style.setProperty('--tick', isWork ? pj.color : '#e27ba6'); });
+        capCta.classList.toggle('on', id === 'contact');
+        capLinks.classList.toggle('on', id === 'contact');
       }
       caption.classList.toggle('show', show);
     }
-    if (seg !== curNow) {
-      curNow = seg;
-      dotBtns.forEach(function (bn, k) { bn.classList.toggle('on', k === seg); });
-      navBtns.forEach(function (bn, k) { bn.classList.toggle('on', k + 1 === seg); });
+    if (visibleStop.id !== curNow) {
+      curNow = visibleStop.id;
+      dotBtns.forEach(function (bn, k) { bn.classList.toggle('on', STOPS[k].id === visibleStop.id); });
+      navBtns.forEach(function (bn) { bn.classList.toggle('on', bn.getAttribute('data-go') === visibleStop.id); });
     }
     distEl.textContent = (-camZ * 0.42).toFixed(1);
 
@@ -476,7 +535,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
     renderer.dispose();
     renderer.forceContextLoss();
     canvas.remove();
-    dotsEl.textContent = ''; ticksEl.textContent = ''; chipsEl.textContent = '';
+    dotsEl.textContent = ''; ticksEl.textContent = ''; chipsEl.textContent = ''; capProjectLinks.textContent = '';
     caption.classList.remove('show'); capCta.classList.remove('on'); capLinks.classList.remove('on'); ticksEl.classList.remove('on');
     copy.removeAttribute('style');
     root.querySelectorAll('.nav ul button.on').forEach(function (bn) { bn.classList.remove('on'); });

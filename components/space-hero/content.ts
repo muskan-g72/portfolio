@@ -1,6 +1,13 @@
-export interface Stage {
+export type StopId = 'home' | 'about' | 'experience' | 'work' | 'contact';
+export type StopKind = 'knot' | 'crystal' | 'aizawa' | 'deck' | 'mobius';
+
+export interface Stop {
+  id: StopId;
   name: string;
-  desc: string;
+  kind: StopKind;
+  anchor: [number, number];
+  position: { x: number; y: number; z: number; r: number; dist?: number; halo?: number };
+  appearWindow: 'first' | 'later' | 'contact';
 }
 
 export interface Project {
@@ -11,29 +18,36 @@ export interface Project {
   color: string;
   hex: number;
   img: string;
+  live?: string;
+  github: string;
 }
 
-/* Strings are copied from muskan-space.html (REFERENCE) without edits. */
-export const STAGES: Stage[] = [
-  { name: 'HOME', desc: '' },
-  { name: 'WORK', desc: 'Selected projects, each with the numbers behind it.' },
-  { name: 'EXPERIENCE', desc: 'Where I have worked and what I built there.' },
-  { name: 'ABOUT', desc: 'Background, education and what I am aiming for next.' },
-  { name: 'CONTACT', desc: 'Open to SWE internships. The résumé is one click away.' }
+export const STOPS: Stop[] = [
+  { id: 'home', name: 'HOME', kind: 'knot', anchor: [0, 0.02], position: { x: 5.2, y: 0.1, z: -26, r: 4 }, appearWindow: 'first' },
+  { id: 'about', name: 'ABOUT', kind: 'crystal', anchor: [0.12, 0.28], position: { x: 4.6, y: -1.2, z: -70, r: 3.9, dist: 24, halo: 0xe27ba6 }, appearWindow: 'first' },
+  { id: 'experience', name: 'EXPERIENCE', kind: 'aizawa', anchor: [0.38, 0.47], position: { x: 7, y: 1, z: -150, r: 3.8, dist: 25, halo: 0x5f8fff }, appearWindow: 'later' },
+  { id: 'work', name: 'WORK', kind: 'deck', anchor: [0.59, 0.91], position: { x: 6.2, y: -0.4, z: -230, r: 3.9, dist: 17, halo: 0x8fb8ff }, appearWindow: 'later' },
+  { id: 'contact', name: 'CONTACT', kind: 'mobius', anchor: [0.98, 1], position: { x: 6.5, y: 0.6, z: -350, r: 3.6, dist: 24, halo: 0x58e0b8 }, appearWindow: 'contact' },
 ];
 
-/* Only change vs REFERENCE: image paths are root-absolute ('/shots/...') so they resolve in Next.js. */
+export const STAGES = STOPS.map(({ name }) => ({ name }));
+
+export const ABOUT_SLIDES = [
+  { title: 'Thapar Institute of Engineering and Technology', lines: ['B. Tech. in Computer Science and Engineering'], chips: ['Aug 2024 – Jun 2028', 'CGPA: 9.47/10'] },
+  { title: 'SCHOLARSHIPS & AWARDS', lines: ['Reliance Foundation Scholar 2024 — national merit scholarship awarded to 5,000 students across India.', 'Thapar Institute Merit Scholarship — awarded to top 10% of cohort for Year 1 academic performance.', 'School Topper, Class XII (CBSE) — 96.8%.'], chips: [] },
+] as const;
+
+export const EXPERIENCE_SLIDES = [{
+  title: 'Software Development Intern', company: 'CampusPro Technologies Pvt. Ltd.', location: 'Gurugram, Haryana', dates: 'Jun 2026 – Jul 2026', tag: 'Education - sector ERP & Mobile App Platform',
+  lines: ['Built frontend enhancements for an Employee Attendance module serving 300+ employees, using HTML and CSS.', 'Supported HRMS integration and database implementation, including testing and validation of attendance workflows.', 'Assisted with deployment activities and technical documentation, collaborating with the engineering team.'],
+}] as const;
+
 export const PROJECTS: Project[] = [
-  { name: 'VeriGate', tag: 'FASTAPI · REACT · PYTEST', desc: 'An AI-assisted platform for managing software verification and QA, with a REST API behind a React interface.', metrics: ['70+ REST endpoints', '119 pytest tests', '~100 ms P95'], color: '#c79bff', hex: 0xb98cff, img: '/shots/verigate-landing.webp' },
-  { name: 'Orchestrix', tag: 'FASTAPI · LLM GATEWAY', desc: 'A gateway in front of LLM providers that admits, rejects and traces every request.', metrics: ['1 admitted / 9 rejected', '1.92 s avg latency', '0% failures'], color: '#7fb0ff', hex: 0x6ea8ff, img: '/shots/orchestrix-landing.webp' },
-  { name: 'RateShield', tag: 'FASTAPI · REDIS', desc: 'An API gateway with Redis-backed rate limiting, load tested with real traffic.', metrics: ['~95 req/s', 'P95 460 ms', '11K+ requests, 0% failures'], color: '#6fe3a6', hex: 0x66e0a0, img: '/shots/rateshield-landing.webp' },
-  { name: 'TaskForge', tag: 'C++17 · CONCURRENCY', desc: 'A concurrent task scheduler in C++17, benchmarked as the worker count scales.', metrics: ['63 → 481 jobs/s', '1 → 8 workers', 'mean of 5 runs'], color: '#e9edff', hex: 0xdfe6ff, img: '/shots/taskforge-4workers-io.webp' }
+  { name: 'VeriGate', tag: 'FASTAPI · REACT · PYTEST', desc: 'An AI-assisted platform for managing software verification and QA, with a REST API behind a React interface.', metrics: ['70+ REST endpoints', '119 pytest tests', '~100 ms P95'], color: '#c79bff', hex: 0xb98cff, img: '/shots/verigate-landing.webp', live: 'https://verigate-frontend-j0ph.onrender.com/', github: 'https://github.com/muskan-g72/VeriGate' },
+  { name: 'Orchestrix', tag: 'FASTAPI · LLM GATEWAY', desc: 'A gateway in front of LLM providers that admits, rejects and traces every request.', metrics: ['1 admitted / 9 rejected', '1.92 s avg latency', '0% failures'], color: '#7fb0ff', hex: 0x6ea8ff, img: '/shots/orchestrix-landing.webp', live: 'https://orchestrix-frontend.onrender.com/', github: 'https://github.com/muskan-g72/Orchestrix' },
+  { name: 'RateShield', tag: 'FASTAPI · REDIS', desc: 'An API gateway with Redis-backed rate limiting, load tested with real traffic.', metrics: ['~95 req/s', 'P95 460 ms', '11K+ requests, 0% failures'], color: '#6fe3a6', hex: 0x66e0a0, img: '/shots/rateshield-landing.webp', live: 'https://rateshield-nine.vercel.app/', github: 'https://github.com/muskan-g72/Rateshield' },
+  { name: 'TaskForge', tag: 'C++17 · CONCURRENCY', desc: 'A concurrent task scheduler in C++17, benchmarked as the worker count scales.', metrics: ['63 → 481 jobs/s', '1 → 8 workers', 'mean of 5 runs'], color: '#e9edff', hex: 0xdfe6ff, img: '/shots/taskforge-4workers-io.webp', github: 'https://github.com/muskan-g72/TaskForge' },
 ];
 
-/* Taken from the resume PDF (hyperlink annotations on page 1). */
-export const LINKS = {
-  resume: '/resume.pdf',
-  email: 'mailto:mmuskan_be24@thapar.edu',
-  github: 'https://github.com/muskan-g72',
-  linkedin: 'https://www.linkedin.com/in/muskan72gulia72'
-};
+const email = 'mmuskan_be24@thapar.edu';
+export const LINKS = { resume: '/resume.pdf', email: `mailto:${email}`, gmail: `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=Hello%20Muskan`, github: 'https://github.com/muskan-g72', linkedin: 'https://www.linkedin.com/in/muskan72gulia72' };

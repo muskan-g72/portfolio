@@ -11,7 +11,7 @@ import './space-hero.css';
 function ContactLinks() {
   return (
     <>
-      <a href={LINKS.email}>EMAIL</a>
+      <a href={LINKS.gmail} target="_blank" rel="noopener noreferrer">{LINKS.email.replace('mailto:', '')}</a>
       <a href={LINKS.github} target="_blank" rel="noopener noreferrer">GITHUB</a>
       <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer">LINKEDIN</a>
     </>
@@ -37,12 +37,12 @@ export default function SpaceHero() {
       <div className="track" id="track">
         <div className="stage" id="stage">
           <nav className="nav" aria-label="Primary">
-            <button className="brand" type="button" data-go="0">MUSKAN</button>
+            <button className="brand" type="button" data-go="home">MUSKAN</button>
             <ul>
-              <li><button type="button" data-go="1">WORK</button></li>
-              <li><button type="button" data-go="2">EXPERIENCE</button></li>
-              <li><button type="button" data-go="3">ABOUT</button></li>
-              <li><button type="button" data-go="4">CONTACT</button></li>
+              <li><button type="button" data-go="about">ABOUT</button></li>
+              <li><button type="button" data-go="experience">EXPERIENCE</button></li>
+              <li><button type="button" data-go="work">WORK</button></li>
+              <li><button type="button" data-go="contact">CONTACT</button></li>
             </ul>
             <a className="resume-mini" href={LINKS.resume} target="_blank" rel="noopener">RESUME</a>
           </nav>
@@ -63,6 +63,7 @@ export default function SpaceHero() {
             <p id="capDesc"></p>
             <div className="chips" id="chips"></div>
             <div className="tag" id="capTag"></div>
+            <div className="links project-links" id="capProjectLinks"></div>
             <div className="ticks" id="ticks"></div>
             <a className="btn cta" id="capCta" href={LINKS.resume} target="_blank" rel="noopener">Resume</a>
             <div className="links" id="capLinks"><ContactLinks /></div>
