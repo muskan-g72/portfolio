@@ -2,8 +2,6 @@ import { Geist } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
-import { SkipLink, SiteNav } from "@/components/layout/SiteNav";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
@@ -49,19 +47,13 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${geist.variable} ${jetbrains.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${geist.variable} ${jetbrains.variable} h-full`}>
       <body className="min-h-full bg-bg font-sans text-text">
         <ThemeProvider>
-          <SkipLink />
-          <SiteNav />
           <CommandPalette />
           {children}
-          <SiteFooter />
         </ThemeProvider>
       </body>
     </html>

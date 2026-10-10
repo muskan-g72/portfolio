@@ -1,25 +1,11 @@
-import { About } from "@/components/about/About";
-import { Contact } from "@/components/contact/Contact";
-import { Experience } from "@/components/experience/Experience";
-import { Handoff } from "@/components/handoff/Handoff";
-import { Hero } from "@/components/hero/Hero";
-import { HashOnLoad } from "@/components/layout/HashOnLoad";
-import { Playground } from "@/components/playground/Playground";
-import { TopologyBackdrop } from "@/components/topology/TopologyBackdrop";
-import { Works } from "@/components/works/Works";
+import type { Metadata } from 'next';
+import SpaceHero from '../components/space-hero/SpaceHero';
 
-export default function Home() {
-  return (
-    <main id="main-content" tabIndex={-1} className="relative outline-none">
-      <HashOnLoad />
-      <TopologyBackdrop />
-      <Hero />
-      <About />
-      <Experience />
-      <Handoff />
-      <Works />
-      <Playground />
-      <Contact />
-    </main>
-  );
+export const metadata: Metadata = {
+  title: 'Muskan',
+  description: 'I build software that holds up under load, from the interface to the infrastructure.'
+};
+
+export default function Page() {
+  return <SpaceHero />;
 }
