@@ -48,7 +48,7 @@ export default function SpaceHero() {
           </nav>
 
           <div className="copy" id="copy">
-            <div className="eyebrow">SOFTWARE ENGINEER · THAPAR · 2026</div>
+            <div className="eyebrow">SOFTWARE ENGINEER</div>
             <h1 className="wordmark">MUSKAN</h1>
             <p className="quote">I build software that <b>holds up under load</b>, from the interface to the infrastructure.</p>
             <div className="row">
@@ -85,7 +85,7 @@ export default function SpaceHero() {
       {/* Shown only when WebGL is unavailable (or JS is off). */}
       <div className="sh-fallback">
         <div className="sh-fb-inner">
-          <div className="eyebrow">SOFTWARE ENGINEER · THAPAR · 2026</div>
+          <div className="eyebrow">SOFTWARE ENGINEER</div>
           <h1 className="wordmark">MUSKAN</h1>
           <p className="quote">I build software that <b>holds up under load</b>, from the interface to the infrastructure.</p>
           <section className="sh-fb-experience" aria-labelledby="sh-fb-experience-title">
