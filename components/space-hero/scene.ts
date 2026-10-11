@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ABOUT, EXPERIENCE_SLIDES, PROJECTS, STOPS, type Stop, type StopId } from './content';
+import { ABOUT, CONTACT_COPY, EXPERIENCE_SLIDES, PROJECTS, STOPS, type Stop, type StopId } from './content';
 
 /* Port of the <script> body of muskan-space.html (REFERENCE, three.js r128).
    Logic, constants, shaders, colours and timings are unchanged. Differences are limited to:
@@ -43,13 +43,26 @@ export function createScene(root: HTMLElement): (() => void) | null {
 
   const $ = (id: string) => root.querySelector('#' + id) as HTMLElement;
   const copy = $('copy'), caption = $('caption');
-  const capIdx = $('capIdx'), capName = $('capName'), capDesc = $('capDesc'), capAboutContent = $('capAboutContent'), capExperience = $('capExperience'), capContactStatus = $('capContactStatus'), capCta = $('capCta'), capLinks = $('capLinks'), capProjectLinks = $('capProjectLinks'), chipsEl = $('chips'), tagEl = $('capTag'), ticksEl = $('ticks');
+  const capIdx = $('capIdx'), capName = $('capName'), capDesc = $('capDesc'), capClosing = $('capClosing'), capAboutContent = $('capAboutContent'), capExperience = $('capExperience'), capContactStatus = $('capContactStatus'), capCta = $('capCta'), capLinks = $('capLinks'), capProjectLinks = $('capProjectLinks'), chipsEl = $('chips'), tagEl = $('capTag'), ticksEl = $('ticks');
   const distEl = $('dist');
   const dotsEl = $('dots');
 
   const cleanups: Array<() => void> = [];
   let disposed = false;
   let raf = 0;
+
+  function wordText(target: HTMLElement, value: string, animate: boolean) {
+    target.textContent = ''; target.setAttribute('aria-label', value); target.classList.remove('word-arrive');
+    value.split(' ').forEach(function (word, index) { const span = document.createElement('span'); span.className = 'contact-word'; span.setAttribute('aria-hidden', 'true'); span.textContent = word + (index < value.split(' ').length - 1 ? ' ' : ''); if (animate) span.style.transitionDelay = `${index * 28}ms`; target.appendChild(span); });
+    if (animate) requestAnimationFrame(function () { if (!disposed) target.classList.add('word-arrive'); }); else target.classList.add('word-arrive');
+  }
+  function resetWordBrightness() { [capDesc, capClosing].forEach(function (block) { block.querySelectorAll<HTMLElement>('.contact-word').forEach(function (word) { word.style.removeProperty('color'); word.style.removeProperty('text-shadow'); }); }); }
+  const contactTextMove = function (event: PointerEvent) {
+    if (reduce || !finePointer) return;
+    [capDesc, capClosing].forEach(function (block) { block.querySelectorAll<HTMLElement>('.contact-word').forEach(function (word) { const rect = word.getBoundingClientRect(), dx = event.clientX - (rect.left + rect.width / 2), dy = event.clientY - (rect.top + rect.height / 2), dist = Math.sqrt(dx * dx + dy * dy), strength = clamp((180 - dist) / 90, 0, 1), r = Math.round(163 + (233 - 163) * strength), g = Math.round(171 + (237 - 171) * strength), b = Math.round(207 + (255 - 207) * strength); word.style.color = `rgb(${r}, ${g}, ${b})`; word.style.textShadow = strength > 0 ? `0 0 12px rgba(126, 224, 181, ${strength * 0.45})` : ''; }); });
+  };
+  const contactTextLeave = function () { resetWordBrightness(); };
+  [capDesc, capClosing].forEach(function (block) { block.addEventListener('pointermove', contactTextMove); block.addEventListener('pointerleave', contactTextLeave); cleanups.push(function () { block.removeEventListener('pointermove', contactTextMove); block.removeEventListener('pointerleave', contactTextLeave); }); });
 
   function maxScroll() { return Math.max(1, document.documentElement.scrollHeight - window.innerHeight); }
   function tFor(id: StopId) { const entry = stop(id); return id === 'home' ? 0 : (entry.anchor[0] + entry.anchor[1]) / 2; }
@@ -315,11 +328,11 @@ export function createScene(root: HTMLElement): (() => void) | null {
         baseColors[q] = colors[q] = c.r; baseColors[q + 1] = colors[q + 1] = c.g; baseColors[q + 2] = colors[q + 2] = c.b;
         sizes[i] = 5 + Math.random() * 7; phases[i] = Math.random() * Math.PI * 2;
       }
-      const neighbours: number[][] = Array.from({ length: COUNT }, () => []), edgePairs: number[] = [], pairSet = new Set<string>();
+      const edgePairs: number[] = [], pairSet = new Set<string>();
       for (let i = 0; i < COUNT; i++) {
         const best = [Infinity, Infinity, Infinity], ids = [-1, -1, -1], wanted = 2 + Math.floor(Math.random() * 2), a = i * 3;
         for (let j = 0; j < COUNT; j++) if (i !== j) { const b = j * 3, dx = base[a] - base[b], dy = base[a + 1] - base[b + 1], dz = base[a + 2] - base[b + 2], dd = dx * dx + dy * dy + dz * dz; for (let n = 0; n < wanted; n++) if (dd < best[n]) { for (let s = wanted - 1; s > n; s--) { best[s] = best[s - 1]; ids[s] = ids[s - 1]; } best[n] = dd; ids[n] = j; break; } }
-        for (let n = 0; n < wanted; n++) if (ids[n] >= 0) { neighbours[i].push(ids[n]); const lo = Math.min(i, ids[n]), hi = Math.max(i, ids[n]), key = `${lo}:${hi}`; if (!pairSet.has(key)) { pairSet.add(key); edgePairs.push(lo, hi); } }
+        for (let n = 0; n < wanted; n++) if (ids[n] >= 0) { const lo = Math.min(i, ids[n]), hi = Math.max(i, ids[n]), key = `${lo}:${hi}`; if (!pairSet.has(key)) { pairSet.add(key); edgePairs.push(lo, hi); } }
       }
       const pointGeo = new THREE.BufferGeometry(); pointGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pointGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3)); pointGeo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
       const pointMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true, uniforms: { uMap: { value: GLOW } }, vertexShader: 'attribute float aSize; varying vec3 vColor; void main(){ vColor=color; vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv; gl_PointSize=aSize*clamp(110.0/max(-mv.z,1.0),0.7,2.4); }', fragmentShader: 'uniform sampler2D uMap; varying vec3 vColor; void main(){ vec4 glow=texture2D(uMap,gl_PointCoord); gl_FragColor=vec4(vColor,glow.a)*glow.a; }' });
@@ -383,7 +396,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
   function keyframes() {
     const offX = narrow ? 0 : 6.0, yo = narrow ? 4.2 : 0, wyo = narrow ? 5.2 : 0;
     const k = {} as Record<StopId, Vec3>;
-    STOPS.forEach(function (entry) { const d = entry.position, dist = (d.dist || 21) + (narrow ? 6 : 0); k[entry.id] = entry.id === 'home' ? { x: narrow ? 4.2 : 0, y: narrow ? 5.2 : 0, z: 0 } : { x: d.x - offX, y: d.y * 0.5 + yo, z: d.z + dist }; });
+    STOPS.forEach(function (entry) { const d = entry.position, dist = (d.dist || 21) + (narrow ? 6 : 0), mobileContactOffset = narrow && entry.id === 'contact' ? 3 : 0; k[entry.id] = entry.id === 'home' ? { x: narrow ? 4.2 : 0, y: narrow ? 5.2 : 0, z: 0 } : { x: d.x - offX, y: d.y * 0.5 + yo + mobileContactOffset, z: d.z + dist }; });
     const work = stop('work').position, dist = (work.dist as number) + (narrow ? 6 : 0);
     WK = PANEL_OFF.map(function (o) { return { x: work.x + o[0] - (narrow ? 0 : 4.6), y: (work.y + o[1]) * 0.5 + wyo, z: work.z + o[2] + dist }; });
     return k;
@@ -506,7 +519,8 @@ export function createScene(root: HTMLElement): (() => void) | null {
          and grow together. Every non-current, non-incoming destination is not drawn. */
       const appear = isIncoming ? smooth(clamp((transition - 0.5) / 0.5, 0, 1)) : isCurrent ? 1 : 0;
       p.grp.visible = appear > 0;
-      p.grp.scale.setScalar((1 + p.hover * 0.05) * (isIncoming ? appear : 1));
+      const responsiveScale = narrow && p.stop.id === 'contact' ? 0.42 : 1;
+      p.grp.scale.setScalar(responsiveScale * (1 + p.hover * 0.05) * (isIncoming ? appear : 1));
       p.halo.material.opacity = 0.18 + p.hover * 0.22 + (active?.id === p.stop.id ? 0.1 : 0);
       if (p.grp.visible) p.update(reduce ? 0 : dt, time, reduce, sceneState);
       if (isIncoming) p.materials.forEach(function (entry) { entry.material.opacity = entry.opacity * appear; });
@@ -534,7 +548,10 @@ export function createScene(root: HTMLElement): (() => void) | null {
         capName.textContent = isWork ? pj.name : isAbout ? ABOUT.title : isExperience ? experience.company : 'CONTACT';
         capName.style.color = isWork ? pj.color : '';
         caption.classList.toggle('long-title', isAbout || isExperience);
-        capDesc.textContent = isWork ? pj.desc : id === 'contact' ? 'I build systems that hold up under load and prove it with numbers: TaskForge scales from 63 to 481 jobs/s, and my API projects hold 0% failures under load tests.' : '';
+        const contact = id === 'contact';
+        if (contact) { const animateWords = !reduce && finePointer; wordText(capDesc, CONTACT_COPY.paragraph, animateWords); wordText(capClosing, CONTACT_COPY.closing, animateWords); }
+        else { capDesc.textContent = isWork ? pj.desc : ''; capDesc.removeAttribute('aria-label'); capClosing.textContent = ''; capClosing.removeAttribute('aria-label'); }
+        capDesc.classList.toggle('contact-copy', contact); capClosing.classList.toggle('on', contact);
         capAboutContent.textContent = '';
         capExperience.textContent = '';
         if (isAbout) {

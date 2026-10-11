@@ -61,9 +61,10 @@ export default function SpaceHero() {
             <div className="idx" id="capIdx"></div>
             <h2 id="capName"></h2>
             <p id="capDesc"></p>
+            <p className="contact-closing" id="capClosing"></p>
             <div className="about-content" id="capAboutContent"></div>
             <div className="experience-content" id="capExperience"></div>
-            <div className="contact-status status" id="capContactStatus"><i></i>OPEN TO SWE INTERNSHIPS.</div>
+            <div className="contact-status status" id="capContactStatus"><i></i>OPEN TO SWE INTERNSHIPS</div>
             <div className="chips" id="chips"></div>
             <div className="tag" id="capTag"></div>
             <div className="links project-links" id="capProjectLinks"></div>

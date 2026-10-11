@@ -45,6 +45,11 @@ export const EXPERIENCE_SLIDES = [{
   lines: ['Built frontend enhancements for an Employee Attendance module serving 300+ employees, using HTML and CSS.', 'Supported HRMS integration and database implementation, including testing and validation of attendance workflows.', 'Assisted with deployment activities and technical documentation, collaborating with the engineering team.'],
 }] as const;
 
+export const CONTACT_COPY = {
+  paragraph: "I'm the kind of engineer who reads the error message twice, then the source once. I like knowing why something works, not only that it does. Right now I'm looking for an internship where I can learn from people better than me, own something small and real, and leave it a little better than I found it.",
+  closing: 'If you have a problem that deserves careful attention, write to me.',
+} as const;
+
 export const PROJECTS: Project[] = [
   { name: 'VeriGate', tag: 'FASTAPI · REACT · PYTEST', desc: 'An AI-assisted platform for managing software verification and QA, with a REST API behind a React interface.', metrics: ['70+ REST endpoints', '119 pytest tests', '~100 ms P95'], color: '#c79bff', hex: 0xb98cff, img: '/shots/verigate-landing.webp', live: 'https://verigate-frontend-j0ph.onrender.com/', github: 'https://github.com/muskan-g72/VeriGate' },
   { name: 'Orchestrix', tag: 'FASTAPI · LLM GATEWAY', desc: 'A gateway in front of LLM providers that admits, rejects and traces every request.', metrics: ['1 admitted / 9 rejected', '1.92 s avg latency'], color: '#7fb0ff', hex: 0x6ea8ff, img: '/shots/orchestrix-landing.webp', live: 'https://orchestrix-frontend.onrender.com/', github: 'https://github.com/muskan-g72/Orchestrix' },
