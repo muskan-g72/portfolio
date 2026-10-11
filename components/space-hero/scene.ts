@@ -542,12 +542,13 @@ export function createScene(root: HTMLElement): (() => void) | null {
       stageNow = key;
       if (show) {
         const id = active?.id as StopId, isWork = id === 'work', isAbout = id === 'about', isExperience = id === 'experience';
-        const pj = PROJECTS[subIndex], experience = EXPERIENCE_SLIDES[subIndex];
+        const pj = PROJECTS[subIndex];
         const stopNumber = String(STOPS.indexOf(stop(id))).padStart(2, '0');
         capIdx.textContent = `${stopNumber} / ${String(LAST).padStart(2, '0')}${isWork ? `  ·  WORK  ·  PROJECT ${String(subIndex + 1).padStart(2, '0')} / ${String(PROJECTS.length).padStart(2, '0')}` : isAbout ? '  ·  ABOUT' : ''}`;
-        capName.textContent = isWork ? pj.name : isAbout ? ABOUT.title : isExperience ? experience.company : 'CONTACT';
+        capName.textContent = isWork ? pj.name : isAbout ? ABOUT.title : isExperience ? '' : 'CONTACT';
         capName.style.color = isWork ? pj.color : '';
         caption.classList.toggle('long-title', isAbout || isExperience);
+        caption.classList.toggle('experience-caption', isExperience);
         const contact = id === 'contact';
         if (contact) { const animateWords = !reduce && finePointer; wordText(capDesc, CONTACT_COPY.paragraph, animateWords); wordText(capClosing, CONTACT_COPY.closing, animateWords); }
         else { capDesc.textContent = isWork ? pj.desc : ''; capDesc.removeAttribute('aria-label'); capClosing.textContent = ''; capClosing.removeAttribute('aria-label'); }
@@ -562,12 +563,20 @@ export function createScene(root: HTMLElement): (() => void) | null {
           capAboutContent.append(institute, degree, scholarshipsLabel, scholarships);
         }
         if (isExperience) {
-          const role = document.createElement('div'); role.className = 'experience-role'; role.textContent = experience.title;
-          const meta = document.createElement('div'); meta.className = 'experience-meta'; meta.textContent = `${experience.location} · ${experience.dates}`;
-          const bullets = document.createElement('ul'); bullets.className = 'experience-bullets'; experience.lines.forEach(function (line) { const item = document.createElement('li'); item.textContent = line; bullets.appendChild(item); });
-          capExperience.append(role, meta, bullets);
+          EXPERIENCE_SLIDES.forEach(function (experience) {
+            const entry = document.createElement('div'); entry.className = 'experience-entry';
+            const roleRow = document.createElement('div'); roleRow.className = 'experience-role-row';
+            const role = document.createElement('div'); role.className = 'experience-role'; role.textContent = experience.title;
+            roleRow.appendChild(role);
+            if (experience.tag === 'INCOMING') { const tag = document.createElement('div'); tag.className = 'experience-incoming'; tag.textContent = experience.tag; roleRow.appendChild(tag); }
+            const company = document.createElement('div'); company.className = 'experience-company'; company.textContent = experience.company;
+            const meta = document.createElement('div'); meta.className = 'experience-meta'; meta.textContent = experience.location ? `${experience.location} · ${experience.dates}` : experience.dates;
+            entry.append(roleRow, company, meta);
+            if (experience.lines.length) { const bullets = document.createElement('ul'); bullets.className = 'experience-bullets'; experience.lines.forEach(function (line) { const item = document.createElement('li'); item.textContent = line; bullets.appendChild(item); }); entry.appendChild(bullets); }
+            capExperience.appendChild(entry);
+          });
         }
-        tagEl.textContent = isWork ? pj.tag : isAbout ? '' : isExperience ? experience.tag : '';
+        tagEl.textContent = isWork ? pj.tag : isAbout ? '' : '';
         chipsEl.innerHTML = '';
         (isWork ? pj.metrics : isAbout ? ABOUT.chips : []).forEach(function (m) { const sp = document.createElement('span'); sp.textContent = m; sp.style.setProperty('--chip', isWork ? pj.color + '66' : 'var(--line)'); chipsEl.appendChild(sp); });
         capProjectLinks.textContent = '';

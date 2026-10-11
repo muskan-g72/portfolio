@@ -40,10 +40,16 @@ export const ABOUT = {
   scholarships: ['Reliance Foundation Scholar 2024', 'Thapar Institute Merit Scholarship'],
 } as const;
 
-export const EXPERIENCE_SLIDES = [{
-  title: 'Software Development Intern', company: 'CampusPro Technologies Pvt. Ltd.', location: 'Gurugram, Haryana', dates: 'Jun 2026 – Jul 2026', tag: 'Education - sector ERP & Mobile App Platform',
-  lines: ['Built frontend enhancements for an Employee Attendance module serving 300+ employees, using HTML and CSS.', 'Supported HRMS integration and database implementation, including testing and validation of attendance workflows.', 'Assisted with deployment activities and technical documentation, collaborating with the engineering team.'],
-}] as const;
+export const EXPERIENCE_SLIDES = [
+  {
+    title: 'Intern Trainee', company: 'NatWest', location: '', dates: 'June 2027 – July 2027', tag: 'INCOMING',
+    lines: [],
+  },
+  {
+    title: 'Software Development Intern', company: 'CampusPro Technologies Pvt. Ltd.', location: 'Gurugram, Haryana', dates: 'Jun 2026 – Jul 2026', tag: 'Education - sector ERP & Mobile App Platform',
+    lines: ['Built frontend enhancements for an Employee Attendance module serving 300+ employees, using HTML and CSS.', 'Supported HRMS integration and database implementation, including testing and validation of attendance workflows.', 'Assisted with deployment activities and technical documentation, collaborating with the engineering team.'],
+  },
+] as const;
 
 export const CONTACT_COPY = {
   paragraph: "I'm the kind of engineer who reads the error message twice, then the source once. I like knowing why something works, not only that it does. Right now I'm looking for an internship where I can learn from people better than me, own something small and real, and leave it a little better than I found it.",

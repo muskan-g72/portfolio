@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import { createScene } from './scene';
-import { LINKS, PROJECTS } from './content';
+import { EXPERIENCE_SLIDES, LINKS, PROJECTS } from './content';
 import { instrument, jetbrains, syne } from './fonts';
 import './space-hero.css';
 
@@ -88,6 +88,20 @@ export default function SpaceHero() {
           <div className="eyebrow">SOFTWARE ENGINEER · THAPAR · 2026</div>
           <h1 className="wordmark">MUSKAN</h1>
           <p className="quote">I build software that <b>holds up under load</b>, from the interface to the infrastructure.</p>
+          <section className="sh-fb-experience" aria-labelledby="sh-fb-experience-title">
+            <p id="sh-fb-experience-title" className="sh-fb-label">EXPERIENCE</p>
+            {EXPERIENCE_SLIDES.map((experience) => (
+              <div className="experience-entry" key={experience.company}>
+                <div className="experience-role-row">
+                  <div className="experience-role">{experience.title}</div>
+                  {experience.tag === 'INCOMING' ? <div className="experience-incoming">{experience.tag}</div> : null}
+                </div>
+                <div className="experience-company">{experience.company}</div>
+                <div className="experience-meta">{experience.location ? `${experience.location} · ${experience.dates}` : experience.dates}</div>
+                {experience.lines.length ? <ul className="experience-bullets">{experience.lines.map((line) => <li key={line}>{line}</li>)}</ul> : null}
+              </div>
+            ))}
+          </section>
           <ul className="sh-fb-list">
             {PROJECTS.map((pj) => (
               <li key={pj.name}>
