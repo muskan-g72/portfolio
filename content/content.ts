@@ -51,7 +51,7 @@ export const content: SiteContent = {
   },
   skills: {
     Languages: ["Python", "C/C++", "TypeScript", "JavaScript", "SQL", "HTML", "CSS"],
-    Application: ["React", "FastAPI", "Django", "REST", "JWT"],
+    Application: ["React", "FastAPI", "REST", "JWT"],
     Infrastructure: ["PostgreSQL", "MySQL", "Redis", "Docker", "Linux", "Git"],
     Testing: ["pytest", "CTest", "ThreadSanitizer", "Locust", "Playwright"],
   },

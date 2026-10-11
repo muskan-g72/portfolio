@@ -71,7 +71,6 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open) {
-      setActive(0);
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [open]);

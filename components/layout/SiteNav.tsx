@@ -1,7 +1,6 @@
 "use client";
 
 import { content } from "@/content/content";
-import { cn } from "@/lib/cn";
 import { jumpToHash } from "@/lib/nav";
 import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
@@ -22,7 +21,7 @@ export function SiteNav() {
   const onHome = pathname === "/";
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-50 bg-bg/90 backdrop-blur-md">
       <div className="flex items-center justify-between px-4 py-4 md:px-8">
         <a
           href={onHome ? "#top" : "/"}
