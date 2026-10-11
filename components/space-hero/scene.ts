@@ -8,7 +8,7 @@ import { ABOUT, EXPERIENCE_SLIDES, PROJECTS, STOPS, type Stop, type StopId } fro
 
 interface Vec3 { x: number; y: number; z: number }
 type Obj = Stop['position'] & { kind: Stop['kind'] };
-interface SceneState { active: StopId | null; subIndex: number; subProgress: number; dwellProgress: number; pointerX: number; pointerY: number; }
+interface SceneState { active: StopId | null; subIndex: number; subProgress: number; dwellProgress: number; pointerX: number; pointerY: number; pointerX3: number; pointerY3: number; pointerZ3: number; pointerDistance: number; pointerActive: boolean; }
 type Updater = (dt: number, time: number, reduce: boolean, state: SceneState) => void;
 type Builder = (d: Obj, grp: THREE.Group) => Updater;
 interface DeckItem {
@@ -22,6 +22,8 @@ export function createScene(root: HTMLElement): (() => void) | null {
   const stop = (id: StopId) => STOPS.find((entry) => entry.id === id) as Stop;
   const orderedStops = STOPS.filter((entry) => entry.id !== 'home');
   const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const finePointer = !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+  let contactPulse: ((time: number, point?: THREE.Vector3) => void) | null = null;
   function clamp(v: number, a: number, b: number) { return Math.min(b, Math.max(a, v)); }
   function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
   function smooth(t: number) { return t * t * (3 - 2 * t); }
@@ -301,50 +303,55 @@ export function createScene(root: HTMLElement): (() => void) | null {
         pulses.forEach(function (pulse) { if (reduced || !active) { pulse.point.visible = false; return; } pulse.point.visible = true; const segments = edgePositions.count / 2; const cycle = ((time + pulse.phase) % pulse.duration) / pulse.duration; const edge = (pulse.edge + Math.floor((time + pulse.phase) / pulse.duration)) % segments; const a = edge * 2, b = a + 1; pulse.point.position.set(lerp(edgePositions.getX(a), edgePositions.getX(b), cycle), lerp(edgePositions.getY(a), edgePositions.getY(b), cycle), lerp(edgePositions.getZ(a), edgePositions.getZ(b), cycle)); });
       };
     },
-    /* CONTACT: Chenciner–Montgomery's equal-mass three-body figure-eight. */
-    orbit8: function (d, grp) {
-      const COUNT = 2000, PERIOD = 6.32591398, STEP = PERIOD / COUNT, TRAIL = 260;
-      type BodyState = Array<{ x: number; y: number; vx: number; vy: number }>;
-      const orbit: Array<Array<{ x: number; y: number }>> = [[], [], []];
-      let state: BodyState = [
-        { x: -0.97000436, y: 0.24308753, vx: 0.466203685, vy: 0.43236573 },
-        { x: 0.97000436, y: -0.24308753, vx: 0.466203685, vy: 0.43236573 },
-        { x: 0, y: 0, vx: -0.93240737, vy: -0.86473146 },
-      ];
-      function derivative(s: BodyState): BodyState {
-        return s.map(function (body, i) {
-          let ax = 0, ay = 0;
-          s.forEach(function (other, j) { if (i !== j) { const dx = other.x - body.x, dy = other.y - body.y, r2 = dx * dx + dy * dy, inv = 1 / (r2 * Math.sqrt(r2)); ax += dx * inv; ay += dy * inv; } });
-          return { x: body.vx, y: body.vy, vx: ax, vy: ay };
-        });
+    /* CONTACT: a responsive star constellation, with all animation data held in typed arrays. */
+    constellation: function (d, grp) {
+      const COUNT = 110, MAX_PULSES = 3, radius = d.r * 1.1, base = new Float32Array(COUNT * 3), pos = new Float32Array(COUNT * 3), vel = new Float32Array(COUNT * 3), colors = new Float32Array(COUNT * 3), baseColors = new Float32Array(COUNT * 3), sizes = new Float32Array(COUNT), phases = new Float32Array(COUNT);
+      const ice = new THREE.Color('#cfe0ff'), mint = new THREE.Color('#7ee0b5'), amber = new THREE.Color('#ffb86b'), white = new THREE.Color('#ffffff');
+      for (let i = 0; i < COUNT; i++) {
+        const y = 1 - (i / (COUNT - 1)) * 2, rr = Math.sqrt(1 - y * y), theta = Math.PI * (3 - Math.sqrt(5)) * i, jitter = 0.94 + Math.random() * 0.12, q = i * 3;
+        base[q] = Math.cos(theta) * rr * radius * jitter; base[q + 1] = y * radius * jitter; base[q + 2] = Math.sin(theta) * rr * radius * jitter;
+        pos[q] = base[q]; pos[q + 1] = base[q + 1]; pos[q + 2] = base[q + 2];
+        const c = Math.random() < 0.07 ? amber : Math.random() < 0.14 ? mint : Math.random() < 0.56 ? white : ice;
+        baseColors[q] = colors[q] = c.r; baseColors[q + 1] = colors[q + 1] = c.g; baseColors[q + 2] = colors[q + 2] = c.b;
+        sizes[i] = 5 + Math.random() * 7; phases[i] = Math.random() * Math.PI * 2;
       }
-      function add(s: BodyState, k: BodyState, amount: number): BodyState { return s.map(function (v, i) { return { x: v.x + k[i].x * amount, y: v.y + k[i].y * amount, vx: v.vx + k[i].vx * amount, vy: v.vy + k[i].vy * amount }; }); }
-      for (let step = 0; step < COUNT; step++) {
-        state.forEach(function (body, i) { orbit[i].push({ x: body.x, y: body.y }); });
-        const k1 = derivative(state), k2 = derivative(add(state, k1, STEP / 2)), k3 = derivative(add(state, k2, STEP / 2)), k4 = derivative(add(state, k3, STEP));
-        state = state.map(function (body, i) { return { x: body.x + STEP * (k1[i].x + 2 * k2[i].x + 2 * k3[i].x + k4[i].x) / 6, y: body.y + STEP * (k1[i].y + 2 * k2[i].y + 2 * k3[i].y + k4[i].y) / 6, vx: body.vx + STEP * (k1[i].vx + 2 * k2[i].vx + 2 * k3[i].vx + k4[i].vx) / 6, vy: body.vy + STEP * (k1[i].vy + 2 * k2[i].vy + 2 * k3[i].vy + k4[i].vy) / 6 }; });
+      const neighbours: number[][] = Array.from({ length: COUNT }, () => []), edgePairs: number[] = [], pairSet = new Set<string>();
+      for (let i = 0; i < COUNT; i++) {
+        const best = [Infinity, Infinity, Infinity], ids = [-1, -1, -1], wanted = 2 + Math.floor(Math.random() * 2), a = i * 3;
+        for (let j = 0; j < COUNT; j++) if (i !== j) { const b = j * 3, dx = base[a] - base[b], dy = base[a + 1] - base[b + 1], dz = base[a + 2] - base[b + 2], dd = dx * dx + dy * dy + dz * dz; for (let n = 0; n < wanted; n++) if (dd < best[n]) { for (let s = wanted - 1; s > n; s--) { best[s] = best[s - 1]; ids[s] = ids[s - 1]; } best[n] = dd; ids[n] = j; break; } }
+        for (let n = 0; n < wanted; n++) if (ids[n] >= 0) { neighbours[i].push(ids[n]); const lo = Math.min(i, ids[n]), hi = Math.max(i, ids[n]), key = `${lo}:${hi}`; if (!pairSet.has(key)) { pairSet.add(key); edgePairs.push(lo, hi); } }
       }
-      const g = new THREE.Group(); g.rotation.set(0.9, 0, -0.25); grp.add(g);
-      g.add(sprite(0x7ee0b5, d.r * 1.9, 0.16));
-      const colors = [0x7ee0b5, 0x8fb8ff, 0xffb86b];
-      const bodies = colors.map(function (color) {
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.11, 14, 10), new THREE.MeshBasicMaterial({ color: color }));
-        body.add(sprite(color, 1.4, 0.9)); g.add(body);
-        const positions = new Float32Array(TRAIL * 3), trailColors = new Float32Array(TRAIL * 3), base = new THREE.Color(color);
-        for (let i = 0; i < TRAIL; i++) { const fade = 1 - i / (TRAIL - 1); trailColors[i * 3] = base.r * fade; trailColors[i * 3 + 1] = base.g * fade; trailColors[i * 3 + 2] = base.b * fade; }
-        const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3)); geometry.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
-        const trail = new THREE.Line(geometry, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false })); g.add(trail);
-        return { body: body, positions: positions, geometry: geometry };
-      });
-      let playhead = 0;
-      function updateBodies(index: number) {
-        bodies.forEach(function (entry, bodyIndex) {
-          for (let i = 0; i < TRAIL; i++) { const point = orbit[bodyIndex][(index - i + COUNT) % COUNT]; entry.positions[i * 3] = point.x * 0.95 * d.r; entry.positions[i * 3 + 1] = point.y * 0.95 * d.r; entry.positions[i * 3 + 2] = 0; }
-          entry.geometry.attributes.position.needsUpdate = true;
-          entry.body.position.set(entry.positions[0], entry.positions[1], entry.positions[2]);
-        });
-      }
-      return function (dt, _time, reduced) { if (reduced) playhead = 400; else playhead = (playhead + dt * 0.5 / STEP) % COUNT; const index = Math.floor(playhead); updateBodies(index); g.rotation.y += reduced ? 0 : dt * 0.06; };
+      const pointGeo = new THREE.BufferGeometry(); pointGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pointGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3)); pointGeo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+      const pointMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true, uniforms: { uMap: { value: GLOW } }, vertexShader: 'attribute float aSize; varying vec3 vColor; void main(){ vColor=color; vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv; gl_PointSize=aSize*clamp(110.0/max(-mv.z,1.0),0.7,2.4); }', fragmentShader: 'uniform sampler2D uMap; varying vec3 vColor; void main(){ vec4 glow=texture2D(uMap,gl_PointCoord); gl_FragColor=vec4(vColor,glow.a)*glow.a; }' });
+      const points = new THREE.Points(pointGeo, pointMat);
+      const edgePos = new Float32Array(edgePairs.length * 3), edgeCol = new Float32Array(edgePairs.length * 3), edgeGeo = new THREE.BufferGeometry(); edgeGeo.setAttribute('position', new THREE.BufferAttribute(edgePos, 3)); edgeGeo.setAttribute('color', new THREE.BufferAttribute(edgeCol, 3));
+      const edges = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const tetherPos = new Float32Array(30), tetherGeo = new THREE.BufferGeometry(); tetherGeo.setAttribute('position', new THREE.BufferAttribute(tetherPos, 3)); tetherGeo.setDrawRange(0, 0);
+      const tethers = new THREE.LineSegments(tetherGeo, new THREE.LineBasicMaterial({ color: 0x7ee0b5, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const sphere = new THREE.Group(); sphere.rotation.x = 0.35; sphere.add(sprite(0x7ee0b5, d.r * 1.9, 0.14), points, edges, tethers); const ring = new THREE.Mesh(new THREE.TorusGeometry(d.r * 1.45, 0.012, 8, 160), mat(0x7ee0b5, 0.25)); ring.rotation.set(0.72, 0.26, -0.38); sphere.add(ring); grp.add(sphere);
+      const pulseOrigin = new Int16Array(MAX_PULSES), pulseStart = new Float32Array(MAX_PULSES), pulseOn = new Uint8Array(MAX_PULSES); let lastInteraction = 0;
+      const nearest = new Int16Array(5), nearestD = new Float32Array(5);
+      function closestTo(x: number, y: number, z: number) { let best = Infinity, index = 0; for (let i = 0; i < COUNT; i++) { const q = i * 3, dx = pos[q] - x, dy = pos[q + 1] - y, dz = pos[q + 2] - z, dd = dx * dx + dy * dy + dz * dz; if (dd < best) { best = dd; index = i; } } return index; }
+      function pulse(index: number, time: number) { if (reduce) return; let slot = -1; for (let i = 0; i < MAX_PULSES; i++) if (!pulseOn[i]) { slot = i; break; } if (slot < 0) slot = 0; pulseOrigin[slot] = index; pulseStart[slot] = time; pulseOn[slot] = 1; lastInteraction = time; }
+      contactPulse = function (time, point) { pulse(point ? closestTo(point.x, point.y, point.z) : Math.floor(Math.random() * COUNT), time); };
+      return function (dt, time, reduced, state) {
+        const interaction = !reduced && finePointer && state.pointerActive && state.pointerDistance < d.r * 0.9, px0 = state.pointerX3, py0 = state.pointerY3, pz0 = state.pointerZ3;
+        if (interaction) lastInteraction = time;
+        if (!reduced && time - lastInteraction > 6) pulse(Math.floor(Math.random() * COUNT), time);
+        for (let i = 0; i < COUNT; i++) {
+          const q = i * 3; let pull = 0;
+          if (interaction) { const dx = px0 - pos[q], dy = py0 - pos[q + 1], dz = pz0 - pos[q + 2], dd = Math.sqrt(dx * dx + dy * dy + dz * dz); pull = Math.max(0, 1 - dd / (d.r * 0.9)); vel[q] += dx * pull * dt * 3.5; vel[q + 1] += dy * pull * dt * 3.5; vel[q + 2] += dz * pull * dt * 3.5; }
+          const rx = base[q] - pos[q], ry = base[q + 1] - pos[q + 1], rz = base[q + 2] - pos[q + 2]; vel[q] += rx * dt * 5; vel[q + 1] += ry * dt * 5; vel[q + 2] += rz * dt * 5; vel[q] *= 0.88; vel[q + 1] *= 0.88; vel[q + 2] *= 0.88; pos[q] += vel[q]; pos[q + 1] += vel[q + 1]; pos[q + 2] += vel[q + 2];
+          const dd = Math.sqrt((pos[q] - base[q]) ** 2 + (pos[q + 1] - base[q + 1]) ** 2 + (pos[q + 2] - base[q + 2]) ** 2), max = d.r * 0.25; if (dd > max) { const f = max / dd; pos[q] = base[q] + (pos[q] - base[q]) * f; pos[q + 1] = base[q + 1] + (pos[q + 1] - base[q + 1]) * f; pos[q + 2] = base[q + 2] + (pos[q + 2] - base[q + 2]) * f; }
+          let bright = reduced ? 1 : 0.78 + 0.22 * Math.sin(time * 2.2 + phases[i]), peak = 0;
+          for (let p = 0; p < MAX_PULSES; p++) if (pulseOn[p]) { const age = time - pulseStart[p]; if (age > 2.2) { pulseOn[p] = 0; continue; } const o = pulseOrigin[p] * 3, dx = base[q] - base[o], dy = base[q + 1] - base[o + 1], dz = base[q + 2] - base[o + 2], front = age / 2.2, dist = Math.sqrt(dx * dx + dy * dy + dz * dz) / (radius * 2.1), wave = Math.exp(-((dist - front) * (dist - front)) / 0.006); peak = Math.max(peak, wave); }
+          bright += pull * 0.65 + peak * 0.8; colors[q] = baseColors[q] * bright + amber.r * peak * 0.55; colors[q + 1] = baseColors[q + 1] * bright + amber.g * peak * 0.55; colors[q + 2] = baseColors[q + 2] * bright + amber.b * peak * 0.55; sizes[i] = (5 + (phases[i] % 1) * 7) * (1 + pull * 0.35 + peak * 0.5);
+        }
+        for (let e = 0; e < edgePairs.length; e += 2) { const a = edgePairs[e], b = edgePairs[e + 1], ai = a * 3, bi = b * 3, q = e * 3; edgePos[q] = pos[ai]; edgePos[q + 1] = pos[ai + 1]; edgePos[q + 2] = pos[ai + 2]; edgePos[q + 3] = pos[bi]; edgePos[q + 4] = pos[bi + 1]; edgePos[q + 5] = pos[bi + 2]; edgeCol[q] = (colors[ai] + colors[bi]) * 0.5; edgeCol[q + 1] = (colors[ai + 1] + colors[bi + 1]) * 0.5; edgeCol[q + 2] = (colors[ai + 2] + colors[bi + 2]) * 0.5; edgeCol[q + 3] = edgeCol[q]; edgeCol[q + 4] = edgeCol[q + 1]; edgeCol[q + 5] = edgeCol[q + 2]; }
+        let tetherCount = 0; if (interaction) { for (let n = 0; n < 5; n++) { nearest[n] = -1; nearestD[n] = Infinity; } for (let i = 0; i < COUNT; i++) { const q = i * 3, dx = pos[q] - px0, dy = pos[q + 1] - py0, dz = pos[q + 2] - pz0, dd = dx * dx + dy * dy + dz * dz; for (let n = 0; n < 5; n++) if (dd < nearestD[n]) { for (let s = 4; s > n; s--) { nearestD[s] = nearestD[s - 1]; nearest[s] = nearest[s - 1]; } nearestD[n] = dd; nearest[n] = i; break; } } for (let n = 0; n < 5 && nearest[n] >= 0; n++) { const q = n * 6, v = nearest[n] * 3; tetherPos[q] = px0; tetherPos[q + 1] = py0; tetherPos[q + 2] = pz0; tetherPos[q + 3] = pos[v]; tetherPos[q + 4] = pos[v + 1]; tetherPos[q + 5] = pos[v + 2]; tetherCount++; } }
+        (pointGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true; (pointGeo.attributes.color as THREE.BufferAttribute).needsUpdate = true; (pointGeo.attributes.aSize as THREE.BufferAttribute).needsUpdate = true; (edgeGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true; (edgeGeo.attributes.color as THREE.BufferAttribute).needsUpdate = true; (tetherGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true; tetherGeo.setDrawRange(0, tetherCount * 2); (tethers.material as THREE.LineBasicMaterial).opacity = interaction ? 0.45 : 0;
+        if (!reduced) sphere.rotation.y += dt * 0.05;
+      };
     }
   };
 
@@ -354,7 +361,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
   const planets = orderedStops.map(function (entry) {
     const d: Obj = { ...entry.position, kind: entry.kind };
     const grp = new THREE.Group(); grp.position.set(d.x, d.y, d.z);
-    const halo = sprite(d.halo as number, d.r * 4.2, 0.2); halo.visible = d.kind !== 'orbit8'; grp.add(halo);
+    const halo = sprite(d.halo as number, d.r * 4.2, 0.2); halo.visible = d.kind !== 'constellation'; grp.add(halo);
     const update = builders[d.kind](d, grp);
     const pick = new THREE.Mesh(new THREE.SphereGeometry(d.r * 1.15, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
     grp.add(pick);
@@ -409,9 +416,22 @@ export function createScene(root: HTMLElement): (() => void) | null {
   const onPointerLeave = function () { mTarget.set(9, 9); };
   window.addEventListener('pointerleave', onPointerLeave);
   cleanups.push(function () { window.removeEventListener('pointerleave', onPointerLeave); });
-  const onCanvasClick = function () { if (hoverIdx >= 0) goTo(planets[hoverIdx].stop.id); };
+  let displayedStop: StopId | null = null, latestTime = 0;
+  const pointerLocal = new THREE.Vector3(), pointerWorld = new THREE.Vector3(), planeNormal = new THREE.Vector3(), pointerPlane = new THREE.Plane();
+  const contactPlanet = planets.find(function (planet) { return planet.stop.id === 'contact'; });
+  const onCanvasClick = function () {
+    if (hoverIdx < 0) return;
+    const id = planets[hoverIdx].stop.id;
+    if (id === 'contact' && displayedStop === 'contact') contactPulse?.(latestTime, pointerLocal);
+    else goTo(id);
+  };
   canvas.addEventListener('click', onCanvasClick);
   cleanups.push(function () { canvas.removeEventListener('click', onCanvasClick); });
+  root.querySelectorAll<HTMLElement>('#capLinks a').forEach(function (link) {
+    const signal = function () { if (displayedStop === 'contact') contactPulse?.(latestTime); };
+    link.addEventListener('mouseenter', signal); link.addEventListener('focus', signal);
+    cleanups.push(function () { link.removeEventListener('mouseenter', signal); link.removeEventListener('focus', signal); });
+  });
 
   let t = 0, fov = FOV, stageNow = '', curNow = '', last = performance.now();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -468,7 +488,14 @@ export function createScene(root: HTMLElement): (() => void) | null {
 
     const hs = 1 - smooth(clamp(-camZ / 16, 0, 1));
     heroGrp.visible = hs > 0.001; heroGrp.scale.setScalar(0.4 + 0.6 * hs);
-    const sceneState: SceneState = { active: active?.id || null, subIndex, subProgress, dwellProgress, pointerX: cx, pointerY: cy };
+    ray.setFromCamera(mouse, cam);
+    let pointerActive = false;
+    pointerLocal.set(0, 0, 0);
+    if (contactPlanet && finePointer && Math.abs(mouse.x) <= 1 && Math.abs(mouse.y) <= 1) {
+      cam.getWorldDirection(planeNormal); pointerPlane.setFromNormalAndCoplanarPoint(planeNormal, contactPlanet.grp.getWorldPosition(pointerWorld));
+      if (ray.ray.intersectPlane(pointerPlane, pointerWorld)) { pointerLocal.copy(pointerWorld); contactPlanet.grp.worldToLocal(pointerLocal); pointerActive = true; }
+    }
+    const sceneState: SceneState = { active: active?.id || null, subIndex, subProgress, dwellProgress, pointerX: cx, pointerY: cy, pointerX3: pointerLocal.x, pointerY3: pointerLocal.y, pointerZ3: pointerLocal.z, pointerDistance: pointerLocal.length(), pointerActive };
     if (heroGrp.visible) heroUpdate(reduce ? 0 : dt, time, reduce, sceneState);
     for (let i = 0; i < planets.length; i++) {
       const p = planets[i];
@@ -486,7 +513,6 @@ export function createScene(root: HTMLElement): (() => void) | null {
       else if (!isCurrent) p.materials.forEach(function (entry) { entry.material.opacity = entry.opacity; });
     }
 
-    ray.setFromCamera(mouse, cam);
     const hit = ray.intersectObjects(meshes, false);
     const hIdx = hit.length ? meshes.indexOf(hit[0].object as THREE.Mesh) : -1;
     if (hIdx !== hoverIdx) { hoverIdx = hIdx; canvas.style.cursor = hIdx >= 0 ? 'pointer' : 'default'; }
@@ -548,6 +574,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
       dotBtns.forEach(function (bn, k) { bn.classList.toggle('on', STOPS[k].id === visibleStop.id); });
       navBtns.forEach(function (bn) { bn.classList.toggle('on', bn.getAttribute('data-go') === visibleStop.id); });
     }
+    displayedStop = active?.id || null; latestTime = time;
     distEl.textContent = (-camZ * 0.42).toFixed(1);
 
     renderer.render(scene, cam);
