@@ -54,6 +54,8 @@ export function SiteNav() {
         <div className="pointer-events-auto flex items-center gap-4">
           <a
             href="/resume.pdf"
+            target="_blank"
+            rel="noopener"
             className="mono text-[11px] text-muted hover:text-text"
           >
             Resume

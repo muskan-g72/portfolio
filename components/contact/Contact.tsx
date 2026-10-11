@@ -27,6 +27,8 @@ export function Contact() {
         </ul>
         <a
           href="/resume.pdf"
+          target="_blank"
+          rel="noopener"
           className="mt-10 inline-block border border-hairline px-4 py-2 text-sm"
         >
           Download resume

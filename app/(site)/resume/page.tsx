@@ -23,6 +23,8 @@ export default function ResumePage() {
         <div className="flex flex-wrap gap-3">
           <a
             href="/resume.pdf"
+            target="_blank"
+            rel="noopener"
             download="Muskan_Resume.pdf"
             className="border border-hairline bg-text px-4 py-2 text-sm text-bg"
           >

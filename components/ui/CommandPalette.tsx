@@ -33,7 +33,7 @@ export function CommandPalette() {
         return;
       }
       if (href.endsWith(".pdf")) {
-        window.location.assign(href);
+        window.open(href, "_blank", "noopener,noreferrer");
         return;
       }
       const hashIndex = href.indexOf("#");
