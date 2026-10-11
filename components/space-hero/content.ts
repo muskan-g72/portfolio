@@ -64,4 +64,4 @@ export const PROJECTS: Project[] = [
 ];
 
 const email = 'mmuskan_be24@thapar.edu';
-export const LINKS = { resume: '/resume.pdf', email: `mailto:${email}`, gmail: `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=Hello%20Muskan`, github: 'https://github.com/muskan-g72', linkedin: 'https://www.linkedin.com/in/muskan72gulia72' };
+export const LINKS = { resume: '/resume.pdf', email: `mailto:${email}`, gmail: `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=Hello%20Muskan`, github: 'https://github.com/muskan-g72', repository: 'https://github.com/muskan-g72/portfolio', linkedin: 'https://www.linkedin.com/in/muskan72gulia72' };
