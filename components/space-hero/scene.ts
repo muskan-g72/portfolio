@@ -13,7 +13,7 @@ type Updater = (dt: number, time: number, reduce: boolean, state: SceneState) =>
 type Builder = (d: Obj, grp: THREE.Group) => Updater;
 interface DeckItem {
   g: THREE.Group; back: THREE.Mesh; img: THREE.Mesh; frame: THREE.LineSegments; frame2: THREE.LineSegments;
-  glow: THREE.Sprite; k: number; w: number; h: number;
+  glow: THREE.Sprite; k: number; w: number; h: number; textureReady: boolean;
 }
 type AnyMat = THREE.Material & { map?: THREE.Texture | null };
 
@@ -210,12 +210,12 @@ export function createScene(root: HTMLElement): (() => void) | null {
       PROJECTS.forEach(function (pj, k) {
         const g = new THREE.Group(); g.position.set(PANEL_OFF[k][0], PANEL_OFF[k][1], PANEL_OFF[k][2]); g.rotation.y = -0.14;
         const back = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0x080b1c, transparent: true, depthWrite: false }));
-        const img = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false })); img.position.z = 0.02;
+        const img = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })); img.position.z = 0.02;
         const frame = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1, 1)), new THREE.LineBasicMaterial({ color: pj.hex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); frame.position.z = 0.03;
         const frame2 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1, 1)), new THREE.LineBasicMaterial({ color: pj.hex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); frame2.position.z = -0.5;
         const glow = sprite(pj.hex, 12, 0.3); glow.position.z = -0.8;
         g.add(glow, frame2, back, img, frame); grp.add(g);
-        const it: DeckItem = { g: g, back: back, img: img, frame: frame, frame2: frame2, glow: glow, k: k, w: 6.4, h: H };
+        const it: DeckItem = { g: g, back: back, img: img, frame: frame, frame2: frame2, glow: glow, k: k, w: 6.4, h: H, textureReady: false };
         function fit() { back.scale.set(it.w + 0.3, it.h + 0.3, 1); img.scale.set(it.w, it.h, 1); frame.scale.set(it.w + 0.3, it.h + 0.3, 1); frame2.scale.set(it.w * 1.06 + 0.3, it.h * 1.06 + 0.3, 1); }
         fit();
         loader.load(pj.img, function (tex) {
@@ -223,8 +223,8 @@ export function createScene(root: HTMLElement): (() => void) | null {
           tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false;
           const asp = tex.image.width / tex.image.height; it.h = H; it.w = Math.min(H * asp, 6.4); if (H * asp > 6.4) it.h = 6.4 / asp;
           const im = img.material as THREE.MeshBasicMaterial;
-          im.map = tex; im.needsUpdate = true; fit();
-        });
+          im.map = tex; im.needsUpdate = true; it.textureReady = true; fit();
+        }, undefined, function () { console.warn(`[space-hero] Failed to load Work slide texture: ${pj.img}`); });
         items.push(it);
       });
       return function (dt, time) {
@@ -234,7 +234,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
           const base = clamp((60 - far) / 25, 0, 1) * clamp((far - 1) / 5, 0, 1);
           const emph = 0.35 + 0.65 * clamp(1 - Math.abs(k - slideF) * 0.9, 0, 1);
           const o = base * emph;
-          (it.back.material as THREE.Material).opacity = 0.88 * o; (it.img.material as THREE.Material).opacity = o * 0.96; (it.frame.material as THREE.Material).opacity = 0.9 * o; (it.frame2.material as THREE.Material).opacity = 0.25 * o; (it.glow.material as THREE.Material).opacity = 0.34 * o;
+          (it.back.material as THREE.Material).opacity = 0.88 * o; (it.img.material as THREE.Material).opacity = it.textureReady ? o * 0.96 : 0; (it.frame.material as THREE.Material).opacity = 0.9 * o; (it.frame2.material as THREE.Material).opacity = 0.25 * o; (it.glow.material as THREE.Material).opacity = 0.34 * o;
           it.g.visible = o > 0.01;
           it.g.position.y = PANEL_OFF[k][1] + Math.sin(time * 0.6 + k * 1.7) * 0.12;
         });
