@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ABOUT_SLIDES, EXPERIENCE_SLIDES, PROJECTS, STOPS, type Stop, type StopId } from './content';
+import { ABOUT, EXPERIENCE_SLIDES, PROJECTS, STOPS, type Stop, type StopId } from './content';
 
 /* Port of the <script> body of muskan-space.html (REFERENCE, three.js r128).
    Logic, constants, shaders, colours and timings are unchanged. Differences are limited to:
@@ -8,7 +8,7 @@ import { ABOUT_SLIDES, EXPERIENCE_SLIDES, PROJECTS, STOPS, type Stop, type StopI
 
 interface Vec3 { x: number; y: number; z: number }
 type Obj = Stop['position'] & { kind: Stop['kind'] };
-interface SceneState { active: StopId | null; subIndex: number; subProgress: number; pointerX: number; pointerY: number; }
+interface SceneState { active: StopId | null; subIndex: number; subProgress: number; dwellProgress: number; pointerX: number; pointerY: number; }
 type Updater = (dt: number, time: number, reduce: boolean, state: SceneState) => void;
 type Builder = (d: Obj, grp: THREE.Group) => Updater;
 interface DeckItem {
@@ -73,11 +73,6 @@ export function createScene(root: HTMLElement): (() => void) | null {
 
   ticksEl.textContent = '';
   const tickStops: Array<{ id: StopId; index: number }> = [];
-  ABOUT_SLIDES.forEach(function (slide, index) {
-    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', slide.title);
-    b.addEventListener('click', function () { const entry = stop('about'); goT(entry.anchor[0] + ((index + 0.3) / ABOUT_SLIDES.length) * (entry.anchor[1] - entry.anchor[0])); });
-    ticksEl.appendChild(b); tickStops.push({ id: 'about', index });
-  });
   PROJECTS.forEach(function (pj, k) {
     const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', pj.name);
     b.addEventListener('click', function () { const entry = stop('work'); goT(entry.anchor[0] + ((k + 0.3) / PROJECTS.length) * (entry.anchor[1] - entry.anchor[0])); });
@@ -273,7 +268,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
       const core = new THREE.Mesh(inner, mat(0xffc0dc, 0.12)); n.add(core);
       const halo = sprite(0xe27ba6, d.r * 1.8, 0.4); grp.add(o, n, halo);
       const orbit = new THREE.Mesh(new THREE.TorusGeometry(d.r * 1.35, 0.012, 10, 160), mat(0xf5b8d6, 0.5)); orbit.rotation.x = 1.25; orbit.rotation.y = 0.3; grp.add(orbit);
-      const awards = ABOUT_SLIDES[0].lines;
+      const awards = ABOUT.scholarships;
       const beads = awards.map(function (_, index) {
         const orbitGroup = new THREE.Group(), spin = new THREE.Group();
         orbitGroup.rotation.set(0.62 + index * 0.37, 0.2 + index * 0.58, index * 0.23);
@@ -292,9 +287,9 @@ export function createScene(root: HTMLElement): (() => void) | null {
         const build = reduced ? 1 : active ? clamp((time - (aboutEnteredAt || time)) / 1.4, 0, 1) : 0;
         shell.geometry.setDrawRange(0, Math.floor((shell.geometry.attributes.position.count / 2) * build) * 2);
         (vertices.material as THREE.PointsMaterial).opacity = build;
-        const opening = active ? smooth(clamp(state.subProgress, 0, 1)) : 0;
-        const scale = 1 + 0.025 * Math.sin(time * 0.8) + opening * 0.095;
-        o.scale.setScalar(reduced ? 1 + opening * 0.12 : scale);
+        const opening = active ? smooth(state.dwellProgress) : 0;
+        const scale = 1 + 0.025 * Math.sin(time * 0.8) + opening * 0.055;
+        o.scale.setScalar(reduced ? 1 + opening * 0.08 : scale);
         o.rotation.y += dt * 0.12 + opening * 0.0005;
         o.rotation.x += dt * 0.04; o.rotation.y += opening * Math.PI / 3 * 0.012;
         n.rotation.y -= dt * 0.2; n.rotation.z += dt * 0.07;
@@ -302,8 +297,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
         (halo.material as THREE.SpriteMaterial).opacity = 0.4 + opening * 0.2;
         grp.rotation.x += ((reduced ? 0 : -state.pointerY * 0.12) - grp.rotation.x) * 0.08;
         grp.rotation.y += ((reduced ? 0 : state.pointerX * 0.12) - grp.rotation.y) * 0.08;
-        const activeAward = Math.min(Math.floor(clamp(state.subProgress - 1, 0, 0.999) * beads.length), beads.length - 1);
-        beads.forEach(function (item, index) { const selected = active && state.subIndex === 1 && index === activeAward; item.spin.rotation.z += reduced ? 0 : dt * item.speed; item.bead.scale.setScalar(selected ? 1.8 : 1); (item.bead.material as THREE.MeshBasicMaterial).opacity = active && state.subIndex === 1 ? (selected ? 1 : 0.28) : 0.2; (item.glow.material as THREE.SpriteMaterial).opacity = active && state.subIndex === 1 ? (selected ? 0.9 : 0.14) : 0.12; });
+        beads.forEach(function (item) { item.spin.rotation.z += reduced ? 0 : dt * item.speed; item.bead.scale.setScalar(1); (item.bead.material as THREE.MeshBasicMaterial).opacity = active ? 0.42 : 0.2; (item.glow.material as THREE.SpriteMaterial).opacity = active ? 0.22 : 0.12; });
         pulses.forEach(function (pulse) { if (reduced || !active) { pulse.point.visible = false; return; } pulse.point.visible = true; const segments = edgePositions.count / 2; const cycle = ((time + pulse.phase) % pulse.duration) / pulse.duration; const edge = (pulse.edge + Math.floor((time + pulse.phase) / pulse.duration)) % segments; const a = edge * 2, b = a + 1; pulse.point.position.set(lerp(edgePositions.getX(a), edgePositions.getX(b), cycle), lerp(edgePositions.getY(a), edgePositions.getY(b), cycle), lerp(edgePositions.getZ(a), edgePositions.getZ(b), cycle)); });
       };
     },
@@ -439,7 +433,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
     const active = t >= next.anchor[0] ? next : null;
     const previous = active ? active : STOPS[STOPS.indexOf(next) - 1];
     const transition = active ? 0 : smooth((t - previous.anchor[1]) / (next.anchor[0] - previous.anchor[1]));
-    const slideCount = active?.id === 'work' ? PROJECTS.length : active?.id === 'about' ? ABOUT_SLIDES.length : 1;
+    const slideCount = active?.id === 'work' ? PROJECTS.length : 1;
     const dwellProgress = active ? clamp((t - active.anchor[0]) / (active.anchor[1] - active.anchor[0]), 0, 1) : 0;
     const slidePosition = dwellProgress * slideCount;
     const subIndex = Math.min(Math.floor(slidePosition), slideCount - 1);
@@ -474,7 +468,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
 
     const hs = 1 - smooth(clamp(-camZ / 16, 0, 1));
     heroGrp.visible = hs > 0.001; heroGrp.scale.setScalar(0.4 + 0.6 * hs);
-    const sceneState: SceneState = { active: active?.id || null, subIndex, subProgress, pointerX: cx, pointerY: cy };
+    const sceneState: SceneState = { active: active?.id || null, subIndex, subProgress, dwellProgress, pointerX: cx, pointerY: cy };
     if (heroGrp.visible) heroUpdate(reduce ? 0 : dt, time, reduce, sceneState);
     for (let i = 0; i < planets.length; i++) {
       const p = planets[i];
@@ -508,18 +502,21 @@ export function createScene(root: HTMLElement): (() => void) | null {
       stageNow = key;
       if (show) {
         const id = active?.id as StopId, isWork = id === 'work', isAbout = id === 'about', isExperience = id === 'experience';
-        const pj = PROJECTS[subIndex], about = ABOUT_SLIDES[subIndex], experience = EXPERIENCE_SLIDES[subIndex];
+        const pj = PROJECTS[subIndex], experience = EXPERIENCE_SLIDES[subIndex];
         const stopNumber = String(STOPS.indexOf(stop(id))).padStart(2, '0');
-        capIdx.textContent = `${stopNumber} / ${String(LAST).padStart(2, '0')}${isWork ? `  ·  WORK  ·  PROJECT ${String(subIndex + 1).padStart(2, '0')} / ${String(PROJECTS.length).padStart(2, '0')}` : isAbout ? `  ·  ABOUT  ·  ${String(subIndex + 1).padStart(2, '0')} / ${String(ABOUT_SLIDES.length).padStart(2, '0')}` : ''}`;
-        capName.textContent = isWork ? pj.name : isAbout ? about.title : isExperience ? experience.company : 'CONTACT';
+        capIdx.textContent = `${stopNumber} / ${String(LAST).padStart(2, '0')}${isWork ? `  ·  WORK  ·  PROJECT ${String(subIndex + 1).padStart(2, '0')} / ${String(PROJECTS.length).padStart(2, '0')}` : isAbout ? '  ·  ABOUT' : ''}`;
+        capName.textContent = isWork ? pj.name : isAbout ? ABOUT.title : isExperience ? experience.company : 'CONTACT';
         capName.style.color = isWork ? pj.color : '';
         caption.classList.toggle('long-title', isAbout || isExperience);
         capDesc.textContent = isWork ? pj.desc : id === 'contact' ? 'I build systems that hold up under load and prove it with numbers: TaskForge scales from 63 to 481 jobs/s, and my API projects hold 0% failures under load tests.' : '';
         capAboutContent.textContent = '';
         capExperience.textContent = '';
         if (isAbout) {
-          const institute = document.createElement('div'); institute.className = 'institute'; institute.textContent = about.institute; capAboutContent.appendChild(institute);
-          const lines = document.createElement('div'); lines.className = 'about-lines'; about.lines.forEach(function (line) { const item = document.createElement('div'); item.textContent = line; lines.appendChild(item); }); capAboutContent.appendChild(lines);
+          const institute = document.createElement('div'); institute.className = 'institute'; institute.textContent = ABOUT.institute;
+          const degree = document.createElement('div'); degree.className = 'degree'; degree.textContent = ABOUT.degree;
+          const scholarshipsLabel = document.createElement('div'); scholarshipsLabel.className = 'scholarships-label'; scholarshipsLabel.textContent = 'SCHOLARSHIPS';
+          const scholarships = document.createElement('ul'); scholarships.className = 'scholarships'; ABOUT.scholarships.forEach(function (name) { const item = document.createElement('li'); item.textContent = name; scholarships.appendChild(item); });
+          capAboutContent.append(institute, degree, scholarshipsLabel, scholarships);
         }
         if (isExperience) {
           const role = document.createElement('div'); role.className = 'experience-role'; role.textContent = experience.title;
@@ -529,7 +526,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
         }
         tagEl.textContent = isWork ? pj.tag : isAbout ? '' : isExperience ? experience.tag : '';
         chipsEl.innerHTML = '';
-        (isWork ? pj.metrics : isAbout ? about.chips : []).forEach(function (m) { const sp = document.createElement('span'); sp.textContent = m; sp.style.setProperty('--chip', isWork ? pj.color + '66' : 'var(--line)'); chipsEl.appendChild(sp); });
+        (isWork ? pj.metrics : isAbout ? ABOUT.chips : []).forEach(function (m) { const sp = document.createElement('span'); sp.textContent = m; sp.style.setProperty('--chip', isWork ? pj.color + '66' : 'var(--line)'); chipsEl.appendChild(sp); });
         capProjectLinks.textContent = '';
         if (isWork) {
           capProjectLinks.style.setProperty('--project-accent', pj.color);
@@ -537,7 +534,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
           links.forEach(function (link) { if (!link.href) return; const a = document.createElement('a'); a.href = link.href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.className = link.className; a.textContent = link.label; capProjectLinks.appendChild(a); });
         }
         capProjectLinks.classList.toggle('on', isWork);
-        const hasTicks = isWork || isAbout;
+        const hasTicks = isWork;
         ticksEl.classList.toggle('on', hasTicks);
         ticksEl.querySelectorAll('button').forEach(function (bn, j) { const item = tickStops[j]; const on = item.id === id && item.index === subIndex; bn.classList.toggle('on', on); bn.style.display = item.id === id ? '' : 'none'; bn.style.setProperty('--tick', isWork ? pj.color : '#e27ba6'); });
         capCta.classList.toggle('on', id === 'contact');

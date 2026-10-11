@@ -24,18 +24,21 @@ export interface Project {
 
 export const STOPS: Stop[] = [
   { id: 'home', name: 'HOME', kind: 'knot', anchor: [0, 0.02], position: { x: 5.2, y: 0.1, z: -26, r: 4 }, appearWindow: 'first' },
-  { id: 'about', name: 'ABOUT', kind: 'crystal', anchor: [0.12, 0.28], position: { x: 4.6, y: -1.2, z: -70, r: 3.9, dist: 24, halo: 0xe27ba6 }, appearWindow: 'first' },
-  { id: 'experience', name: 'EXPERIENCE', kind: 'aizawa', anchor: [0.38, 0.47], position: { x: 7, y: 1, z: -150, r: 3.8, dist: 25, halo: 0x5f8fff }, appearWindow: 'later' },
-  { id: 'work', name: 'WORK', kind: 'deck', anchor: [0.59, 0.91], position: { x: 6.2, y: -0.4, z: -230, r: 3.9, dist: 17, halo: 0x8fb8ff }, appearWindow: 'later' },
+  { id: 'about', name: 'ABOUT', kind: 'crystal', anchor: [0.11, 0.22], position: { x: 4.6, y: -1.2, z: -70, r: 3.9, dist: 24, halo: 0xe27ba6 }, appearWindow: 'first' },
+  { id: 'experience', name: 'EXPERIENCE', kind: 'aizawa', anchor: [0.33, 0.43], position: { x: 7, y: 1, z: -150, r: 3.8, dist: 25, halo: 0x5f8fff }, appearWindow: 'later' },
+  { id: 'work', name: 'WORK', kind: 'deck', anchor: [0.55, 0.91], position: { x: 6.2, y: -0.4, z: -230, r: 3.9, dist: 17, halo: 0x8fb8ff }, appearWindow: 'later' },
   { id: 'contact', name: 'CONTACT', kind: 'orbit8', anchor: [0.98, 1], position: { x: 6.5, y: 0.6, z: -350, r: 3.6, dist: 24, halo: 0x58e0b8 }, appearWindow: 'contact' },
 ];
 
 export const STAGES = STOPS.map(({ name }) => ({ name }));
 
-export const ABOUT_SLIDES = [
-  { title: 'EDUCATION', institute: 'Thapar Institute of Engineering and Technology', lines: ['Reliance Foundation Scholar 2024', 'Thapar Institute Merit Scholarship'], chips: [] },
-  { title: 'EDUCATION', institute: 'Thapar Institute of Engineering and Technology', lines: ['B. Tech. in Computer Science and Engineering'], chips: ['Aug 2024 – Jun 2028', 'CGPA: 9.47/10'] },
-] as const;
+export const ABOUT = {
+  title: 'EDUCATION',
+  institute: 'Thapar Institute of Engineering and Technology',
+  degree: 'B. Tech. in Computer Science and Engineering',
+  chips: ['Aug 2024 – Jun 2028', 'CGPA: 9.47/10'],
+  scholarships: ['Reliance Foundation Scholar 2024', 'Thapar Institute Merit Scholarship'],
+} as const;
 
 export const EXPERIENCE_SLIDES = [{
   title: 'Software Development Intern', company: 'CampusPro Technologies Pvt. Ltd.', location: 'Gurugram, Haryana', dates: 'Jun 2026 – Jul 2026', tag: 'Education - sector ERP & Mobile App Platform',
