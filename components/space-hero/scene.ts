@@ -110,7 +110,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
     return new THREE.CanvasTexture(c);
   }
   const GLOW = glowTexture();
-  function sprite(color: number, scale: number, opacity: number) {
+  function sprite(color: number | THREE.Color, scale: number, opacity: number) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: color, transparent: true, opacity: opacity, depthWrite: false, blending: THREE.AdditiveBlending }));
     s.scale.set(scale, scale, 1);
     return s;
@@ -190,7 +190,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
   }
   const BEAM = beamTexture();
 
-  let camZNow = 0, slideF = 0;
+  let camZNow = 0, slideF = 0, narrow = window.innerWidth / window.innerHeight < 0.95;
   const PANEL_OFF = [[0, 0, 0], [1.3, 1.0, -20], [2.6, -0.4, -40], [3.9, 0.8, -60]];
   /* ---------- helpers ---------- */
   function lineMat(color: number, opacity: number) { return new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: opacity, blending: THREE.AdditiveBlending, depthWrite: false }); }
@@ -198,6 +198,26 @@ export function createScene(root: HTMLElement): (() => void) | null {
     const n = positions.length / 3, col = new Float32Array(n * 3), a = new THREE.Color(c0), b = new THREE.Color(c1), t = new THREE.Color();
     for (let i = 0; i < n; i++) { const f = Math.min(1, Math.max(0, positions[i * 3 + axis] / span * 0.5 + 0.5)); t.copy(a).lerp(b, f); const br = 0.7 + Math.random() * 0.3; col[i * 3] = t.r * br; col[i * 3 + 1] = t.g * br; col[i * 3 + 2] = t.b * br; }
     return col;
+  }
+
+  /* Signal beacon: lit core inside a fine graticule, tilted armillary rings with ticks, travelling beads, outgoing pulse rings */
+  function buildBeacon() {
+    const ICE = 0xb4d0ff, GOLD = 0xffc27a, MINT = 0x7ee0b5, WHITE = 0xf4f8ff, half = narrow ? 0.5 : 1;
+    const root = new THREE.Group(), spin = new THREE.Group(); root.add(spin); root.scale.setScalar(1.7);
+    const pts = (arr: number[], color: number | THREE.Color, size: number, opacity: number) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(arr), 3)); const p = new THREE.Points(g, new THREE.PointsMaterial({ color, size, map: GLOW, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false })); p.frustumCulled = false; return p; };
+    const circle = (R: number, n: number) => { const a: number[] = []; for (let i = 0; i < n; i++) { const u = i / n * 6.2832; a.push(Math.cos(u) * R, 0, Math.sin(u) * R); } return a; };
+    const core: number[] = []; for (let i = 0; i < 3200 * half; i++) { let x: number, y: number, z: number, l: number; do { x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1; l = x * x + y * y + z * z; } while (l > 1 || l < 0.001); l = Math.sqrt(l); const k = 0.42 * Math.pow(l, 0.55) / l; core.push(x * k, y * k, z * k); }
+    spin.add(pts(core, WHITE, 0.06, 0.9));
+    const beaconSprite = (color: number | THREE.Color, size: number, opacity: number) => sprite(color, size * 2.2, opacity);
+    const g1 = beaconSprite(new THREE.Color(GOLD), 1.6, 0.3), g2 = beaconSprite(new THREE.Color(WHITE), 0.9, 0.7), g3 = beaconSprite(new THREE.Color(MINT), 5.5, 0.14); root.add(g3, g1, g2);
+    const gr: number[] = []; for (let m = 0; m < 10; m++) { const ph = m / 10 * 3.1416; for (let j = 0; j < 140 * half; j++) { const u = j / (140 * half) * 6.2832, cx = Math.cos(u), cy = Math.sin(u); gr.push(cx * Math.cos(ph), cy, cx * Math.sin(ph)); } } for (let q = -2; q <= 2; q++) { const yy = q * 0.32, rr = Math.sqrt(1 - yy * yy); for (let w = 0; w < 170 * half; w++) { const u = w / (170 * half) * 6.2832; gr.push(Math.cos(u) * rr, yy, Math.sin(u) * rr); } }
+    const grat = pts(gr, ICE, 0.06, 0.85); spin.add(grat);
+    const rings: Array<{ g: THREE.Group; b: THREE.Group; sp: number; ph: number }> = [];
+    [[1.55, 0.35, 0.0, GOLD], [1.95, -0.55, 0.5, ICE], [2.4, 0.95, -0.3, GOLD]].forEach((d, idx) => { const gp = new THREE.Group(); gp.rotation.set(d[1], d[2], idx * 0.4); gp.add(pts(circle(d[0], 700 * half), d[3], 0.085, 1)); const tk: number[] = []; for (let t = 0; t < 72; t++) { const a = t / 72 * 6.2832, len = t % 6 === 0 ? 0.16 : 0.07; for (let s = 0; s < 4; s++) { const rr = d[0] - len * s / 3; tk.push(Math.cos(a) * rr, 0, Math.sin(a) * rr); } } gp.add(pts(tk, WHITE, 0.055, 0.9)); const bh = new THREE.Group(), bd = beaconSprite(new THREE.Color(idx === 1 ? MINT : GOLD), 0.28, 0.95); bd.position.set(d[0], 0, 0); bh.add(bd); gp.add(bh); spin.add(gp); rings.push({ g: gp, b: bh, sp: 0.35 + idx * 0.18, ph: idx * 2 }); });
+    const pulses: Array<{ g: THREE.Group; m: THREE.PointsMaterial; o: number }> = []; for (let pI = 0; pI < 4; pI++) { const pr = pts(circle(1, 900 * half), pI % 2 ? ICE : GOLD, 0.07, 0); const pg = new THREE.Group(); pg.rotation.x = 1.15; pg.add(pr); root.add(pg); pulses.push({ g: pg, m: pr.material as THREE.PointsMaterial, o: pI / 4 }); }
+    const dust: number[] = []; for (let d = 0; d < 260 * half; d++) { const rd = 1.4 + Math.random() * 3.6, a1 = Math.random() * 6.2832, a2 = (Math.random() - 0.5) * 2.2; dust.push(Math.cos(a1) * rd, Math.sin(a2) * rd * 0.5, Math.sin(a1) * rd); } const dustP = pts(dust, ICE, 0.045, 0.6); root.add(dustP);
+    const ptr = { x: 0, y: 0 }; root.userData.update = (time: number, px: number, py: number) => { ptr.x += (px - ptr.x) * 0.05; ptr.y += (py - ptr.y) * 0.05; root.rotation.y = ptr.x * 0.35; root.rotation.x = -ptr.y * 0.25 + 0.12; spin.rotation.y = time * 0.12; grat.rotation.y = -time * 0.2; dustP.rotation.y = time * 0.03; rings.forEach((r, i) => { r.g.rotation.z = i * 0.4 + Math.sin(time * 0.25 + i) * 0.12; r.b.rotation.y = -(time * r.sp + r.ph); }); const br = 1 + Math.sin(time * 1.6) * 0.06; g1.scale.set(1.6 * 2.2 * br, 1.6 * 2.2 * br, 1); pulses.forEach((p) => { const u = (time * 0.22 + p.o) % 1, s = 0.9 + u * 4.4; p.g.scale.set(s, s, s); p.m.opacity = Math.pow(1 - u, 1.6) * Math.min(1, u * 8); }); };
+    return root;
   }
 
   const builders: Record<string, Builder> = {
@@ -316,9 +336,11 @@ export function createScene(root: HTMLElement): (() => void) | null {
         pulses.forEach(function (pulse) { if (reduced || !active) { pulse.point.visible = false; return; } pulse.point.visible = true; const segments = edgePositions.count / 2; const cycle = ((time + pulse.phase) % pulse.duration) / pulse.duration; const edge = (pulse.edge + Math.floor((time + pulse.phase) / pulse.duration)) % segments; const a = edge * 2, b = a + 1; pulse.point.position.set(lerp(edgePositions.getX(a), edgePositions.getX(b), cycle), lerp(edgePositions.getY(a), edgePositions.getY(b), cycle), lerp(edgePositions.getZ(a), edgePositions.getZ(b), cycle)); });
       };
     },
-    /* CONTACT: a responsive star constellation, with all animation data held in typed arrays. */
-    constellation: function (d, grp) {
-      const COUNT = 110, MAX_PULSES = 3, radius = d.r * 1.1, base = new Float32Array(COUNT * 3), pos = new Float32Array(COUNT * 3), vel = new Float32Array(COUNT * 3), colors = new Float32Array(COUNT * 3), baseColors = new Float32Array(COUNT * 3), sizes = new Float32Array(COUNT), phases = new Float32Array(COUNT);
+    /* CONTACT: Signal beacon. */
+    beacon: function (_d, grp) {
+      const d = _d, beacon = buildBeacon(); grp.add(beacon);
+      return function (_dt, time, reduced, state) { beacon.userData.update(reduced ? 0 : time, reduced ? 0 : state.pointerX, reduced ? 0 : state.pointerY); };
+      const COUNT = 110, MAX_PULSES = 3, radius = _d.r * 1.1, base = new Float32Array(COUNT * 3), pos = new Float32Array(COUNT * 3), vel = new Float32Array(COUNT * 3), colors = new Float32Array(COUNT * 3), baseColors = new Float32Array(COUNT * 3), sizes = new Float32Array(COUNT), phases = new Float32Array(COUNT);
       const ice = new THREE.Color('#cfe0ff'), mint = new THREE.Color('#7ee0b5'), amber = new THREE.Color('#ffb86b'), white = new THREE.Color('#ffffff');
       for (let i = 0; i < COUNT; i++) {
         const y = 1 - (i / (COUNT - 1)) * 2, rr = Math.sqrt(1 - y * y), theta = Math.PI * (3 - Math.sqrt(5)) * i, jitter = 0.94 + Math.random() * 0.12, q = i * 3;
@@ -374,7 +396,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
   const planets = orderedStops.map(function (entry) {
     const d: Obj = { ...entry.position, kind: entry.kind };
     const grp = new THREE.Group(); grp.position.set(d.x, d.y, d.z);
-    const halo = sprite(d.halo as number, d.r * 4.2, 0.2); halo.visible = d.kind !== 'constellation'; grp.add(halo);
+    const halo = sprite(d.halo as number, d.r * 4.2, 0.2); halo.visible = d.kind !== 'beacon'; grp.add(halo);
     const update = builders[d.kind](d, grp);
     const pick = new THREE.Mesh(new THREE.SphereGeometry(d.r * 1.15, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
     grp.add(pick);
@@ -386,11 +408,10 @@ export function createScene(root: HTMLElement): (() => void) | null {
         materials.push({ material: entry, opacity: entry.opacity });
       });
     });
-    return { grp: grp, body: pick, halo: halo, update: update, d: d, stop: entry, hover: 0, materials: materials };
+    return { grp: grp, body: pick, halo: halo, update: update, d: d, stop: entry, hover: 0, reducedUpdated: false, materials: materials };
   });
 
   /* ---------- camera keyframes ---------- */
-  let narrow = false;
   let WK: Vec3[] = [];
   let KF: Record<StopId, Vec3>;
   function keyframes() {
@@ -522,7 +543,7 @@ export function createScene(root: HTMLElement): (() => void) | null {
       const responsiveScale = narrow && p.stop.id === 'contact' ? 0.42 : 1;
       p.grp.scale.setScalar(responsiveScale * (1 + p.hover * 0.05) * (isIncoming ? appear : 1));
       p.halo.material.opacity = 0.18 + p.hover * 0.22 + (active?.id === p.stop.id ? 0.1 : 0);
-      if (p.grp.visible) p.update(reduce ? 0 : dt, time, reduce, sceneState);
+      if (p.grp.visible && (!reduce || p.stop.id !== 'contact' || !p.reducedUpdated)) { p.update(reduce ? 0 : dt, time, reduce, sceneState); if (reduce && p.stop.id === 'contact') p.reducedUpdated = true; }
       if (isIncoming) p.materials.forEach(function (entry) { entry.material.opacity = entry.opacity * appear; });
       else if (!isCurrent) p.materials.forEach(function (entry) { entry.material.opacity = entry.opacity; });
     }
